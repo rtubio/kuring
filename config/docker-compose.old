@@ -1,0 +1,69 @@
+version: '3'
+
+services:
+
+  web:
+    build:
+      context: ../.
+      dockerfile: config/dockerfile.kuring
+    restart: always
+    container_name: kuring-django
+    networks:
+      - http_network
+      - db_network
+    volumes:
+      - http_static_volume:/opt/services/kuring/static
+    depends_on:
+      - db
+      - tasks
+
+  nginx:
+    build:
+      context: ../.
+      dockerfile: config/dockerfile.nginx
+    restart: always
+    container_name: kuring-nginx
+    ports:
+      - 8000:80
+    depends_on:
+      - web
+    volumes:
+      - http_static_volume:/opt/services/kuring/static
+    networks:
+      - http_network
+
+  tasks:
+    image: redis:alpine
+    restart: always
+    container_name: kuring-redis
+    networks:
+      - db_network
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  db:
+    image: postgres:alpine
+    restart: always
+    container_name: kuring-pgsqldb
+    env_file:
+      - ../.secrets/db.env
+    networks:
+      - db_network
+    volumes:
+      - db_data_vol:/var/lib/postgresql/data/
+
+networks:
+  http_network:
+    driver: bridge
+  db_network:
+    driver: bridge
+
+volumes:
+  db_data_vol:
+  http_static_volume:

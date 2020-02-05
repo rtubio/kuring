@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  db:
+    image: postgres:alpine
+    restart: always
+    container_name: kuring-pgsqldb
+    env_file:
+      - ../.secrets/db.env
+    networks:
+      - db_network
+    volumes:
+      - db_data_vol:/var/lib/postgresql/data/
+
+networks:
+  http_network:
+    driver: bridge
+  db_network:
+    driver: bridge
+
+volumes:
+  db_data_vol:
+  http_static_volume:
