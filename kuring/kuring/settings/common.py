@@ -82,14 +82,25 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.join(__file__
 STATIC_ROOT = os.path.abspath(os.path.join(BASE_DIR, '../static'))
 STATIC_URL = '/static/'
 
+# Routing
+ROOT_URLCONF = 'kuring.urls'
+WSGI_APPLICATION = 'kuring.wsgi.application'
+
 # Site ID, see configuration for 'django.contrib.sites'
 SITE_ID = 1
+
+# Internationalization
+# https://docs.djangoproject.com/en/3.0/topics/i18n/
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
 
 # SECURITY WARNING: keep the secret key used in production secret!
 with open('../.__skr__/django.json') as file:
     django_secrets = json.load(file)
 SECRET_KEY = django_secrets['djsk']
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -100,6 +111,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.sites',
     'django.contrib.staticfiles',
+    ### 自分で
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -112,14 +125,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'kuring.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS':  [
-            os.path.join(BASE_DIR, 'kuring', 'templates')
-        ],
+        'DIRS':  [os.path.join(BASE_DIR, 'kuring', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -132,8 +141,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'kuring.wsgi.application'
-
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -143,16 +150,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/3.0/topics/i18n/
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_L10N = True
-USE_TZ = True
-
 # ### CELERY configuration
 with open('../config/celery.json') as file:
     celery_secrets = json.load(file)
 CELERY_BROKER_URL = celery_secrets['broker']
-CELERY_RESULT_BACKEND = celery_secrets['backend']
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0' # 'django-db'
+# CELERY_CACHE_BACKEND = 'django-cache'
+
+# CELERY_ACCEPT_CONTENT = ['application/json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'

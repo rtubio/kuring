@@ -7,12 +7,14 @@ from celery import Celery
 #    https://docs.celeryproject.org/en/latest/django/first-steps-with-django.html
 
 # Adapted to support separate PRODUCTION and DEVELOPMENT configuration files
-if sys.argv[-1] == 'dev':
+# > For a development environment, set the environment variable '__DJ_DEVPROD' to 'dev'
+# > For a production environment, do nothing.
+if os.environ['__DJ_DEVPROD'] == 'dev':
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kuring.settings.development')
 else:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kuring.settings.production')
 
-app = Celery('kuring')
+app = Celery('kuring', backend='redis://localhost:6379')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
@@ -22,8 +24,3 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
-
-
-@app.task(bind=True)
-def debug_task(self):
-    print('Request: {0!r}'.format(self.request))
