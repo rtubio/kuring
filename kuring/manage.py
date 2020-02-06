@@ -5,16 +5,14 @@ import sys
 
 def main():
 
-    # Minor modification: permits loading different settings for PRODUCTION and for DEVELOPMENT
-    # > For development: add 'dev' as the last argument of the call
-    # > For production: do nothing
+    # Adapted to support separate PRODUCTION and DEVELOPMENT configuration files
+    # > For a development environment, set the environment variable '__DJ_DEVPROD' to 'dev'
+    # > For a production environment, do nothing.
 
-    if sys.argv[-1] == 'dev':
+    if '__DJ_DEVPROD' in os.environ and os.environ['__DJ_DEVPROD'] == 'dev':
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kuring.settings.development')
-        args = list(sys.argv[0:-1])
     else:
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kuring.settings.production')
-        args = list(sys.argv)
 
     try:
         from django.core.management import execute_from_command_line
@@ -24,7 +22,7 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
-    execute_from_command_line(args)
+    execute_from_command_line(sys.argv)
 
 
 if __name__ == '__main__':
