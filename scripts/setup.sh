@@ -59,12 +59,12 @@ install_env_packages
 source "$VENV_ACTIVATE"
 # 3.1) create secret key
 key="$( python $django_skg )"
-create_secret "$SECRETS_DJANGO" "$key"
+create_django_secret "$SECRETS_DJANGO" "$key"
 # 3.2) migrate the database and create superuser (DEVELOPMENT)
 cd "$DJANGO_APP_DIR"
-python manage.py migrate dev
-python manage.py createsuperuser dev
-python manage.py collectstatic --no-input dev
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py collectstatic --no-input
 cd ..
 
 deactivate
