@@ -1,7 +1,9 @@
 from __future__ import absolute_import, unicode_literals
+import importlib.util
 import os
 import sys
 from celery import Celery
+from kuring import settings # import development, production
 
 # Configuration file for CELERY, taken from:
 #    https://docs.celeryproject.org/en/latest/django/first-steps-with-django.html
@@ -11,10 +13,14 @@ from celery import Celery
 # > For a production environment, do nothing.
 if os.environ['__DJ_DEVPROD'] == 'dev':
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kuring.settings.development')
+    spec = importlib.util.find_spec('kuring.settings.development')
+    djcfg = spec.loader.load_module()
 else:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kuring.settings.production')
+    spec = importlib.util.find_spec('kuring.settings.production')
+    djcfg = spec.loader.load_module()
 
-app = Celery('kuring', backend='redis://localhost:6379')
+app = Celery('kuring', backend=djcfg.CELERY_CACHE_BACKEND)
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

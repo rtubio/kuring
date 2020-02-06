@@ -152,11 +152,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # ### CELERY configuration
 with open('../config/celery.json') as file:
-    celery_secrets = json.load(file)
-CELERY_BROKER_URL = celery_secrets['broker']
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0' # 'django-db'
-# CELERY_CACHE_BACKEND = 'django-cache'
+    celery_cfg = json.load(file)
+CELERY_BROKER_URL = celery_cfg['broker']
+CELERY_RESULT_BACKEND = celery_cfg['backend']   # 'redis://localhost:6379/0' # 'django-db'
+CELERY_CACHE_BACKEND = celery_cfg['backend-cache']
 
-# CELERY_ACCEPT_CONTENT = ['application/json']
-# CELERY_TASK_SERIALIZER = 'json'
-# CELERY_RESULT_SERIALIZER = 'json'
+# TODO # check why it does not work
+# CELERY_ACCEPT_CONTENT = celery_cfg['application/json']
+# CELERY_TASK_SERIALIZER = celery_cfg['json']
+# CELERY_RESULT_SERIALIZER = celery_cfg['json']
