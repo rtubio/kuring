@@ -22,7 +22,7 @@ add_extra_repositories () {
 
 post_sys_install () {
   sudo usermod -aG docker "$USER"
-  # su - ${USER} && exit
+  # TODO # this needs to be manually executed: su - ${USER}
   # install docker redis image
   echo "[info, $0] Starting REDIS DOCKER (fails if it is already running, do not worry)"
   docker run --name=kuring-redis --publish=6379:6379 --hostname=redis --restart=on-failure --detach redis:latest
