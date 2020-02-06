@@ -5,6 +5,8 @@ import sys
 from celery import Celery
 from kuring import settings # import development, production
 
+# TODO # The backend has been specified explicitly as a parameter for the 'Celery' application constructor.
+
 # Configuration file for CELERY, taken from:
 #    https://docs.celeryproject.org/en/latest/django/first-steps-with-django.html
 
