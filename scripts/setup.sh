@@ -6,6 +6,29 @@
 #
 # @author: ricardo@karbontek.co.jp
 
+
+add_extra_repositories () {
+  # docker repository
+  sudo apt update
+  sudo apt install curl
+  curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+  sudo add-apt-repository \
+    "deb [arch=amd64] https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable"
+  sudo apt update
+  apt-cache policy docker-ce
+}
+
+
+post_sys_install () {
+  sudo usermod -aG docker "$USER"
+  # su - ${USER} && exit
+  # install docker redis image
+  echo "[info, $0] Starting REDIS DOCKER (fails if it is already running, do not worry)"
+  docker run --name=kuring-redis --publish=6379:6379 --hostname=redis --restart=on-failure --detach redis:latest
+}
+
+
 create_django_secret() {
   # Creates the secrets file for Django with the given key
   # $1 : path to the secrets file to be created
@@ -20,6 +43,7 @@ create_django_secret() {
 
 }
 
+
 install_sys_packages () {
   [[ -f "$PACKAGES_FILE" ]] && {
     sudo apt update && sudo apt -y full-upgrade
@@ -28,6 +52,7 @@ install_sys_packages () {
     echo "[warn, $0] No \"$PACKAGES_FILE\" available, skipping SYS package installation..."
   }
 }
+
 
 install_env_packages () {
   [[ ! -d "$VENV_DIR" ]] && virtualenv --python=python3 "$VENV_DIR" && echo "[info, $0] \"$VENV_DIR\" initialized"
@@ -51,7 +76,10 @@ mkdir -p "$STATIC_DIR"
 # TODO # Remove if unnecessary: # mkdir -p "$CELERY_LOGS"
 
 # 1) Install Debian packages for DEVELOPMENT
+add_extra_repositories
 install_sys_packages
+post_sys_install
+
 # 2) Setup virtual environment for DEVELOPMENT
 install_env_packages
 

@@ -1,0 +1,14 @@
+# Debian packages for the development environment
+
+# System packages
+apt-transport-https
+ca-certificates
+curl
+gnupg2
+software-properties-common
+
+# Python virtualenv
+virtualenv
+
+# Docker
+docker-ce
