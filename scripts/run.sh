@@ -16,7 +16,9 @@ python manage.py migrate
 python manage.py collectstatic --no-input
 
 echo "[info, $0] Starting REDIS DOCKER (fails if it is already running, do not worry)"
-docker run --name=kuring-redis --publish=6379:6379 --hostname=redis --restart=on-failure --detach redis:latest
+docker run --name=kuring-redis --publish=6379:6379 --hostname=redis --restart=always --detach redis:alpine
+echo "[info, $0] Starting INFLUXDB DOCKER (fails if it is already running, do not worry)"
+docker run --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach influxdb:alpine
 
 echo "[info, $0] Starting CELERY WORKER"
 celery --app kuring worker -l info

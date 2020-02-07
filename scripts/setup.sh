@@ -23,23 +23,94 @@ add_extra_repositories () {
 post_sys_install () {
   sudo usermod -aG docker "$USER"
   # TODO # this needs to be manually executed: su - ${USER}
-  # install docker redis image
-  echo "[info, $0] Starting REDIS DOCKER (fails if it is already running, do not worry)"
-  docker run --name=kuring-redis --publish=6379:6379 --hostname=redis --restart=on-failure --detach redis:latest
 }
 
 
-create_django_secret() {
+create_django_secret () {
   # Creates the secrets file for Django with the given key
   # $1 : path to the secrets file to be created
   # $2 : secret key to be stored
-
   filestr=$"
 {
   \"djsk\": \"$2\"
 }
   "
   echo "$filestr" > "$1"
+}
+
+
+install_redis () {
+  # This function installs REDIS server using the docker image - no need for extra configuration.
+  docker run --name=kuring-redis --publish=6379:6379 --hostname=redis --restart=always --detach redis:alpine
+}
+
+
+create_influxdb_secret () {
+  # Creates the secrets file for the InfluxDB/Django configuration
+  # $1 : path to the secrets file to be created
+  # $2 : password for the administrator user
+  # $3 : name for the regular user
+  # $4 : password for the regular user
+  # $5 : name for the new database to be created
+  filestr=$"
+{
+  \"admp\": \"$2\",
+  \"usrn\": \"$3\",
+  \"usrp\": \"$4\",
+  \"dbnx\": \"$5\",
+}
+  "
+  echo "$filestr" > "$1"
+}
+
+
+install_influxdb () {
+  # This function installs InfluxDB locally using docker and configures it with the same data than Django.
+  # docker run --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach influxdb:alpine
+
+  echo -n "Please input the name for the InfluxDB database:"
+  read idbdbname
+
+  echo -n 'Please input password for the admin InfluxDB database user:'
+  read -s password
+  echo
+  echo -n 'Please input your password again:'
+  read -s password2
+  echo
+
+  [[ "$password" == "$password2" ]] || {
+    echo 'Passwords do not match, please execute again...'
+    exit -1
+  }
+  admpass="$password"
+
+  echo -n "Please input the name for the InfluxDB user:"
+  read idbname
+
+  echo -n "Please input password for the <$INFLUXDB_USER> InfluxDB database user:"
+  read -s password
+  echo
+  echo -n 'Please input your password again:'
+  read -s password2
+  echo
+
+  [[ "$password" == "$password2" ]] || {
+    echo 'Passwords do not match, please execute again...'
+    exit -1
+  }
+  idbpass="$password"
+
+  docker run \
+      -e INFLUXDB_HTTP_AUTH_ENABLED=true\
+      -e INFLUXDB_DB="$idbdbname" \
+      -e INFLUXDB_ADMIN_USER=admin -e INFLUXDB_ADMIN_PASSWORD="$admpass" \
+      -e INFLUXDB_USER="$idbname" -e INFLUXDB_USER_PASSWORD="$idbpass" \
+      --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach \
+      influxdb:alpine /init-influxdb.sh
+
+  create_influxdb_secret "$SECRETS_INFLUXDB" "$admpass" "$idbname" "$idbpass" "$idbdbname"
+
+  docker exec kuring-influxdb influxd config > /tmp/influxdb.conf
 
 }
 
@@ -68,7 +139,8 @@ install_env_packages () {
 
 source 'config/scripts.config'
 
-echo "[info, $0] Starting execution, pwd = $(pwd)"
+echo "[info, $0] Starting execution (DEV ENVIRONMENT SETUP), pwd = $(pwd)"
+export __DJ_DEVPROD='dev'
 
 # 0) Create required directories for DEVELOPMENT
 mkdir -p "$SECRETS_DIR"
@@ -83,12 +155,16 @@ post_sys_install
 # 2) Setup virtual environment for DEVELOPMENT
 install_env_packages
 
-# 3) Configure Django
+# 3) Setup influxDB and REDIS
+install_influxdb
+install_redis
+
+# 4) Configure Django
 source "$VENV_ACTIVATE"
-# 3.1) create secret key
+# 4.1) create secret key
 key="$( python $django_skg )"
 create_django_secret "$SECRETS_DJANGO" "$key"
-# 3.2) migrate the database and create superuser (DEVELOPMENT)
+# 4.2) migrate the database and create superuser (DEVELOPMENT)
 cd "$DJANGO_APP_DIR"
 python manage.py migrate
 python manage.py createsuperuser
