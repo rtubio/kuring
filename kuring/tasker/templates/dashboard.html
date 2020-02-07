@@ -2,9 +2,9 @@
 {% load icons %}
 
 {% block dashboard %}
-<div class="row">
+<div class="row" style="height: 100%">
   {% block leftdash %}
-  <div class="col-3 bg-info text-light align-middle">
+  <div class="col-2 bg-info text-light align-middle">
 
     <div class="container text-center">
       <ul class="navbar-nav mr-auto">
@@ -16,20 +16,14 @@
         <li class="nav-item active">
 
           <div class="row">
-            <div class="col-2">
+            <div class="col-4">
               <a class="nav-link text-light" href="#">{% icon 'play' %}</a>
             </div>
-            <div class="col-2">
+            <div class="col-4">
               <a class="nav-link text-light disabled" href="#">{% icon 'stop' %}</a>
             </div>
-            <div class="col-2">
+            <div class="col-4">
               <a class="nav-link text-light disabled" href="#">{% icon 'pause' %}</a>
-            </div>
-            <div class="col-2">
-              <a class="nav-link text-light disabled" href="#">{% icon 'save' %}</a>
-            </div>
-            <div class="col-2">
-              <a class="nav-link text-light disabled" href="#">{% icon 'trash' %}</a>
             </div>
           </div>
 
@@ -45,7 +39,7 @@
   </div>
   {% endblock %}
   {% block rightdash %}
-  <div class="col-9">
+  <div class="col-10">
   </div>
   {% endblock %}
 </div>
