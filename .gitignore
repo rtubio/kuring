@@ -2,6 +2,7 @@
 .__skr__/
 .env/
 static/
+!kuring/kuring/static/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
