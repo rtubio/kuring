@@ -1,9 +1,82 @@
-<!DOCTYPE html>
+{% load static %}
+{% load bootstrap4 %}
+{% load icons %}
+
 <html>
+
+  <head>
+    {% block head-meta %}
+  	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% endblock %}
+
+    {% block head-css %}
+      {% bootstrap_css %}
+      {% bootstrap_javascript jquery='full' %}
+      {% bootstrap_messages %}
+      <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    {% endblock %}
+
+    <link rel="stylesheet" href="{% static 'kuring.css' %}">
+    <link rel="favicon" type="image/png" href="{% static 'karbon-white.png' %}"/>
+
+  </head>
+
 <body>
 
-<h1>KarbonTek Kuring</h1>
-<p>Web manager for the curing oven.</p>
+<div>
+  <nav class="navbar navbar-expand-lg navbar-light bg-dark text-light">
+
+    <img class="navbar-logo" src="{% static "karbon.png" %}" alt="logo">
+
+    <a class="navbar-brand text-light" href="#">kuring control</a>
+    <button class="navbar-toggler text-light" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link text-light" href="#">current<span class="sr-only">(current)</span></a>
+        </li>
+        <!--
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+          </li>
+        -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-light" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            archive
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            {% if archived %}
+            <!-- TODO : to be populated with the elements of the archive
+              <a class="dropdown-item" href="#">Action</a>
+              <a class="dropdown-item" href="#">Another action</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="#">Something else here</a>
+             -->
+             {% else %}
+              <a class="dropdown-item" href="#">(no elements)</a>
+             {% endif %}
+          </div>
+        </li>
+        <!--
+        <li class="nav-item">
+          <a class="nav-link disabled" href="#">Disabled</a>
+        </li>
+        -->
+      </ul>
+
+    </div>
+  </nav>
+</div>
+
+<div class="bg-light">
+  {% block dashboard %}
+  {% endblock %}
+</div>
 
 </body>
+
 </html>

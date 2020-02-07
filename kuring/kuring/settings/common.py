@@ -111,8 +111,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.sites',
     'django.contrib.staticfiles',
-    ### 自分で
+    ### Dependencies
     'django_celery_results',
+    'bootstrap4',
+    'django_icons',
+    ### 自分で
+    'tasker'
 ]
 
 MIDDLEWARE = [
@@ -148,6 +152,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+]
+
+# Extra static file directories, outside of the common 'static' for all apps
+# https://docs.djangoproject.com/en/3.0/howto/static-files/
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "kuring", "static"),
 ]
 
 # ### CELERY configuration
