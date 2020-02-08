@@ -106,7 +106,15 @@ install_influxdb () {
       -e INFLUXDB_HTTP_AUTH_ENABLED=true\
       -e INFLUXDB_ADMIN_USER=admin -e INFLUXDB_ADMIN_PASSWORD="$admpass" \
       --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach \
-      influxdb:alpine # /init-influxdb.sh
+      influxdb:alpine
+
+# NOTE # It was not possible to make the configuration of InfluxDB using the recommended script included within the
+# docker image. The process has been altered and that script has been replaced by a Python script.
+#     # The commands are kept below for further reference.
+#     # Instructions taken from:
+#             https://hub.docker.com/_/influxdb/
+#     # Python script configuration taken from:
+#     #       https://influxdb-python.readthedocs.io/en/latest/api-documentation.html#influxdbclient
 
 #  docker run \
 #      -e INFLUXDB_HTTP_AUTH_ENABLED=true\
@@ -115,14 +123,13 @@ install_influxdb () {
 #      -e INFLUXDB_DB="$dbname" \
 #      --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach \
 #      influxdb:alpine /init-influxdb.sh
+# docker run -e INFLUXDB_HTTP_AUTH_ENABLED=true --name=kuring-influxdb \
+# --publish=8086:8086 --hostname=influxdb --restart=always --detach \
+# influxdb:alpine /init-influxdb.sh
+# docker exec kuring-influxdb /init-influxdb.sh
+# docker exec kuring-influxdb influxd config > /tmp/influxdb.conf
 
-  # docker run -e INFLUXDB_HTTP_AUTH_ENABLED=true --name=kuring-influxdb \
-  # --publish=8086:8086 --hostname=influxdb --restart=always --detach \
-  # influxdb:alpine /init-influxdb.sh
-
-  docker exec kuring-influxdb /init-influxdb.sh
-
-  docker exec kuring-influxdb influxd config > /tmp/influxdb.conf
+  python "$influxdb_py" "$dbname" "$usrname" "$usrpass" "admin" "$admpass"
 
   create_influxdb_secret "$SECRETS_INFLUXDB" "$admpass" "$idbname" "$idbpass" "$idbdbname"
 
