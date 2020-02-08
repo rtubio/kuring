@@ -1,35 +1,25 @@
 {% extends 'dashboard.html' %}
 {% load bootstrap4 %}
 {% load icons %}
+{% load taskertags %}
 
 {% block content %}
 
-<!-- Modal -->
-<div class="modal fade" id="modalConfirm" tabindex="-1" role="dialog" aria-labelledby="confirm" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-body">
-        <span aria-hidden="true">Are you sure that you want to PERMANENTLY delete this task?</span>
-      </div>
-      <div class="modal-footer">
-        <a type="button" class="btn btn-primary" href="{% url 'deleteTask' object.pk %}">{% icon 'trash' %}</a>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% icon 'times' %}</button>
-      </div>
-    </div>
-  </div>
-</div>
+{% include 'partial/confirmDelete.html' %}
+{% include 'partial/confirmRun.html' %}
+{% include 'partial/confirmStop.html' %}
 
-<div class="container">
+<div class="container-sl">
   <div class="row">
     <div class="col-3 bg-secondary text-light">
       <hr/>
-      <p>{{ object.name }}</p>
-      <p class="font-weight-light">{{ object.date }}</p>
-      <p class="font-weight-light">{{ object.status }}</p>
+      <p class="text-capitalize">{{ object.name }}</p>
+      <p class="font-weight-normal">{{ object.date|date:"SHORT_DATETIME_FORMAT" }}</p>
+      <p class="font-weight-normal">{{ object.status|status }}</p>
       <hr/>
       <div class="row">
         <div class="col">
-          <a id="db-trash" class="nav-link text-light" data-toggle="modal" data-target="#modalConfirm">{% icon 'trash' %}</a>
+          <a id="db-trash" class="nav-link text-light" data-toggle="modal" data-target="#confirmDelete">{% icon 'trash' %}</a>
         </div>
         <div class="col">
           <a id="db-edit" class="nav-link text-light" href="{% url 'updateTask' object.pk %}">{% icon 'edit' %}</a>
@@ -39,9 +29,13 @@
         </div>
       </div>
       <hr/>
+      {% block controls %}
+
+{% if object.status == 'N' %}
       <div class="row">
         <div class="col">
-          <a id="db-play" class="nav-link text-light" href="#">{% icon 'play' %}</a>
+          <a id="db-play" class="nav-link text-light"
+            data-toggle="modal" data-target="#confirmRun">{% icon 'play' %}</a>
         </div>
         <div class="col">
           <a id="db-stop" class="nav-link text-light na" href="#">{% icon 'stop' %}</a>
@@ -50,6 +44,28 @@
           <a id="db-pause" class="nav-link text-light na" href="#">{% icon 'pause' %}</a>
         </div>
       </div>
+{% elif object.status == 'R' or object.status == 'P' %}
+      <div class="row">
+        <div class="col">
+          <a id="db-play" class="nav-link text-light na">{% icon 'play' %}</a>
+        </div>
+        <div class="col">
+          <a id="db-stop" class="nav-link text-light"
+              data-toggle="modal" data-target="#confirmStop">{% icon 'stop' %}</a>
+        </div>
+        <div class="col">
+          <a id="db-pause" class="nav-link text-light" href="#">{% icon 'pause' %}</a>
+        </div>
+      </div>
+{% else %}
+      <div class="row">
+        <div class="col"><a id="db-play" class="nav-link text-light na">{% icon 'play' %}</a></div>
+        <div class="col"><a id="db-stop" class="nav-link text-light na">{% icon 'stop' %}</a></div>
+        <div class="col"><a id="db-pause" class="nav-link text-light na">{% icon 'pause' %}</a></div>
+      </div>
+{% endif %}
+
+      {% endblock %}
       <hr/>
     </div>
     <div class="col-9 bg-light"><div class="row p-2"><div class="col">

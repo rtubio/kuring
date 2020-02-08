@@ -1,0 +1,15 @@
+{% load icons %}
+
+<div class="modal fade" id="confirmDelete" tabindex="-1" role="dialog" aria-labelledby="confirm" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <span aria-hidden="true">Are you sure that you want to PERMANENTLY delete this task?</span>
+      </div>
+      <div class="modal-footer">
+        <a type="button" class="btn btn-danger" href="{% url 'deleteTask' object.pk %}">{% icon 'trash' %}</a>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% icon 'times' %}</button>
+      </div>
+    </div>
+  </div>
+</div>

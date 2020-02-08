@@ -1,0 +1,15 @@
+{% load icons %}
+
+<div class="modal fade" id="confirmRun" tabindex="-1" role="dialog" aria-labelledby="run" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <span aria-hidden="true">Are you sure that you want to RUN this task?</span>
+      </div>
+      <div class="modal-footer">
+        <a type="button" class="btn btn-info" href="{% url 'runTask' object.pk %}">{% icon 'rocket' %}</a>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% icon 'times' %}</button>
+      </div>
+    </div>
+  </div>
+</div>

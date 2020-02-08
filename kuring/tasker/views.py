@@ -17,7 +17,7 @@ class CreateTask(CreateView):
     """View to create the task"""
     model = models.Task
     fields = ['name']
-    template_name = 'createTask.html'
+    template_name = 'editTask.html'
 
 
 class DeleteTask(DeleteView):
@@ -26,6 +26,7 @@ class DeleteTask(DeleteView):
     success_url = reverse_lazy('dashboard')
 
     def get(self, request, *args, **kwargs):
+        """NOTE - This is necessary to avoid returning the "static deletion confirmation page."""
         return self.post(request, *args, **kwargs)
 
 
@@ -39,4 +40,28 @@ class UpdateTask(UpdateView):
     """View to update the task"""
     model = models.Task
     fields = ['name']
-    template_name = 'updateTask.html'
+    template_name = 'editTask.html'
+
+
+class RunTask(DetailView):
+    """View to launch a task"""
+    model = models.Task
+    template_name = 'detailTask.html'
+
+    def get_object(self):
+        obj = super().get_object()
+        obj.status = models.Task.RUNNING
+        obj.save()
+        return obj
+
+
+class StopTask(DetailView):
+    """View to stop a running task"""
+    model = models.Task
+    template_name = 'detailTask.html'
+
+    def get_object(self):
+        obj = super().get_object()
+        obj.status = models.Task.FINISHED
+        obj.save()
+        return obj

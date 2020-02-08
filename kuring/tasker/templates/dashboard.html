@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
 {% load bootstrap4 %}
 {% load icons %}
+{% load taskertags %}
 
 {% block nav-toolbox %}
-  <a id="db-play" class="nav-link text-light" href="{% url 'createTask' %}">{% icon 'plus' %}</a>
+  <div class="col"><a id="db-play" class="nav-link text-light" href="{% url 'dashboard' %}">{% icon 'home' %}</a></div>
+  <div class="col"><a id="db-play" class="nav-link text-light" href="{% url 'createTask' %}">{% icon 'plus' %}</a></div>
 {% endblock %}
 
 {% block content %}
@@ -12,9 +14,9 @@
     <div class="container">
     {% for o in object_list %}
       <div class="row text-center p-3 mb-2 bg-secondary text-white">
-        <div class="col-8"><a href="{% url 'detailTask' o.pk %}" class="text-white">{{ o.name }}</a></div>
-        <div class="col-2">{{ o.date|date }}</div>
-        <div class="col-2">{{ o.status }}</div>
+        <div class="col-7"><a class=" text-white" href="{% url 'detailTask' o.pk %}">{{ o.name }}</a></div>
+        <div class="col-4 font-weight-normal">{{ o.date|date:"SHORT_DATETIME_FORMAT" }}</div>
+        <div class="col-1 font-weight-normal">{{ o.status|status }}</div>
       </div>
     {% endfor %}
     </div>

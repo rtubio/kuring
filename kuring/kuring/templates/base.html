@@ -28,18 +28,16 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-dark text-light">
 
   <img class="navbar-logo" src="{% static "karbon.png" %}" alt="logo">
-  <a class="navbar-brand nav-link navbar-brand-container text-light text-monospace"
-    href="{% url 'dashboard' %}">kuring
-  </a>
+  <a class="navbar-brand nav-link navbar-brand-container text-light" href="#">kuring</a>
 
-  <div class="container"><div class="row"><div class="col-12">
+  <div class="container"><div class="row">
     {% block nav-toolbox %}
     {% endblock %}
-  </div></div></div>
+  </div></div>
 
 </nav>
 
-  <div class="container"><div class="row text-center">
+  <div class="container-fluid"><div class="row text-center">
     <div class="col-12 font-weight-bold text-info" style="padding-top: 50px; padding-bottom: 50px;">
       {% block content %}
       {% endblock %}
