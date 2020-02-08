@@ -69,7 +69,7 @@ install_influxdb () {
   # docker run --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach influxdb:alpine
 
   echo -n "Please input the name for the InfluxDB database:"
-  read idbdbname
+  read dbname
 
   echo -n 'Please input password for the admin InfluxDB database user:'
   read -s password
@@ -85,9 +85,9 @@ install_influxdb () {
   admpass="$password"
 
   echo -n "Please input the name for the InfluxDB user:"
-  read idbname
+  read usrname
 
-  echo -n "Please input password for the <$INFLUXDB_USER> InfluxDB database user:"
+  echo -n "Please input password for the <$idbname> InfluxDB database user:"
   read -s password
   echo
   echo -n 'Please input your password again:'
@@ -98,19 +98,33 @@ install_influxdb () {
     echo 'Passwords do not match, please execute again...'
     exit -1
   }
-  idbpass="$password"
+  usrpass="$password"
+
+  echo "dbname=$dbname,admpass=$admpass,usrname=$usrname,usrpass=$usrpass,"
 
   docker run \
       -e INFLUXDB_HTTP_AUTH_ENABLED=true\
-      -e INFLUXDB_DB="$idbdbname" \
       -e INFLUXDB_ADMIN_USER=admin -e INFLUXDB_ADMIN_PASSWORD="$admpass" \
-      -e INFLUXDB_USER="$idbname" -e INFLUXDB_USER_PASSWORD="$idbpass" \
       --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach \
-      influxdb:alpine /init-influxdb.sh
+      influxdb:alpine # /init-influxdb.sh
 
-  create_influxdb_secret "$SECRETS_INFLUXDB" "$admpass" "$idbname" "$idbpass" "$idbdbname"
+#  docker run \
+#      -e INFLUXDB_HTTP_AUTH_ENABLED=true\
+#      -e INFLUXDB_ADMIN_USER=admin -e INFLUXDB_ADMIN_PASSWORD="$admpass" \
+#      -e INFLUXDB_USER="$usrname" -e INFLUXDB_USER_PASSWORD="$usrpass" \
+#      -e INFLUXDB_DB="$dbname" \
+#      --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach \
+#      influxdb:alpine /init-influxdb.sh
+
+  # docker run -e INFLUXDB_HTTP_AUTH_ENABLED=true --name=kuring-influxdb \
+  # --publish=8086:8086 --hostname=influxdb --restart=always --detach \
+  # influxdb:alpine /init-influxdb.sh
+
+  docker exec kuring-influxdb /init-influxdb.sh
 
   docker exec kuring-influxdb influxd config > /tmp/influxdb.conf
+
+  create_influxdb_secret "$SECRETS_INFLUXDB" "$admpass" "$idbname" "$idbpass" "$idbdbname"
 
 }
 
@@ -148,15 +162,16 @@ mkdir -p "$STATIC_DIR"
 # TODO # Remove if unnecessary: # mkdir -p "$CELERY_LOGS"
 
 # 1) Install Debian packages for DEVELOPMENT
-add_extra_repositories
-install_sys_packages
-post_sys_install
+# add_extra_repositories
+# install_sys_packages
+# post_sys_install
 
 # 2) Setup virtual environment for DEVELOPMENT
-install_env_packages
+# install_env_packages
 
 # 3) Setup influxDB and REDIS
 install_influxdb
+exit 0
 install_redis
 
 # 4) Configure Django
