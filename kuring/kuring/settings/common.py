@@ -85,6 +85,7 @@ STATIC_URL = '/static/'
 # Routing
 ROOT_URLCONF = 'kuring.urls'
 WSGI_APPLICATION = 'kuring.wsgi.application'
+ASGI_APPLICATION = 'kuring.routing.application'
 
 # Site ID, see configuration for 'django.contrib.sites'
 SITE_ID = 1
@@ -115,6 +116,7 @@ INSTALLED_APPS = [
     'django_celery_results',
     'bootstrap4',
     'django_icons',
+    'channels',
     ### 自分で
     'tasker'
 ]

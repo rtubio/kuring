@@ -1,24 +1,25 @@
 {% extends 'base.html' %}
+{% load bootstrap4 %}
 {% load icons %}
 
 {% block nav-toolbox %}
+  <a id="db-play" class="nav-link text-light" href="{% url 'createTask' %}">{% icon 'plus' %}</a>
+{% endblock %}
 
-<div class="collapse navbar-collapse" id="navbarSupportedContent">
-  <ul class="navbar-nav mr-auto">
-    <li class="nav-item active">
-      <a class="nav-link text-light" href="{% url 'dashboard' %}">{% icon 'play' %}</a>
-    </li>
-  </ul>
-  <ul class="navbar-nav mr-auto">
-    <li class="nav-item active">
-      <a class="nav-link text-light disabled" href="{% url 'dashboard' %}">{% icon 'stop' %}</a>
-    </li>
-  </ul>
-  <ul class="navbar-nav mr-auto">
-    <li class="nav-item active">
-      <a class="nav-link text-light disabled" href="{% url 'dashboard' %}">{% icon 'pause' %}</a>
-    </li>
-  </ul>
-</div>
+{% block content %}
+
+  {% if object_list %}
+    <div class="container">
+    {% for o in object_list %}
+      <div class="row text-center p-3 mb-2 bg-secondary text-white">
+        <div class="col-8"><a href="{% url 'detailTask' o.pk %}" class="text-white">{{ o.name }}</a></div>
+        <div class="col-2">{{ o.date|date }}</div>
+        <div class="col-2">{{ o.status }}</div>
+      </div>
+    {% endfor %}
+    </div>
+  {% else %}
+    <span class="text-center">(no tasks)</span>
+  {% endif %}
 
 {% endblock %}

@@ -1,19 +1,28 @@
 body {
     overflow: hidden;
 }
+
 .navbar-logo {
   height: 100px;
   padding-left:5%;
   padding-right:5%;
   padding-top: 5px;
   padding-bottom: 5px;
-  border-right: 2px solid white;
 }
+
 .navbar-brand-container {
   padding-left: 5%;
-  padding-right: 50%;
+  padding-right: 5%;
+  border-left: 2px solid white;
+  border-right: 2px solid white;
 }
+
 .navbar-nav > li{
   padding-left:5px;
   padding-right:5px;
+}
+
+.na {
+  opacity: 0.15;
+  cursor: not-allowed;
 }
