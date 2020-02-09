@@ -33,7 +33,9 @@ while True:
         time.sleep(RETRYTIME)
         continue
 
+# NOTE # This operation is not necessary anymore since it is carried out by the docker configuration step
 # client.create_user("admin", "123", admin=True)
+
 client.create_user(usrname, usrpass)
 client.create_database(dbname)
 

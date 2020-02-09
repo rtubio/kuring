@@ -11,7 +11,7 @@
 
 <div class="container-sl">
   <div class="row">
-    <div class="col-3 bg-secondary text-light">
+    <div class="col-2 bg-secondary text-light">
       <hr/>
       <p class="text-capitalize">{{ object.name }}</p>
       <p class="font-weight-normal">{{ object.date|date:"SHORT_DATETIME_FORMAT" }}</p>
@@ -29,48 +29,28 @@
         </div>
       </div>
       <hr/>
-      {% block controls %}
 
-{% if object.status == 'N' %}
-      <div class="row">
-        <div class="col">
-          <a id="db-play" class="nav-link text-light"
-            data-toggle="modal" data-target="#confirmRun">{% icon 'play' %}</a>
-        </div>
-        <div class="col">
-          <a id="db-stop" class="nav-link text-light na" href="#">{% icon 'stop' %}</a>
-        </div>
-        <div class="col">
-          <a id="db-pause" class="nav-link text-light na" href="#">{% icon 'pause' %}</a>
-        </div>
-      </div>
-{% elif object.status == 'R' or object.status == 'P' %}
-      <div class="row">
-        <div class="col">
-          <a id="db-play" class="nav-link text-light na">{% icon 'play' %}</a>
-        </div>
-        <div class="col">
-          <a id="db-stop" class="nav-link text-light"
-              data-toggle="modal" data-target="#confirmStop">{% icon 'stop' %}</a>
-        </div>
-        <div class="col">
-          <a id="db-pause" class="nav-link text-light" href="#">{% icon 'pause' %}</a>
-        </div>
-      </div>
-{% else %}
-      <div class="row">
-        <div class="col"><a id="db-play" class="nav-link text-light na">{% icon 'play' %}</a></div>
-        <div class="col"><a id="db-stop" class="nav-link text-light na">{% icon 'stop' %}</a></div>
-        <div class="col"><a id="db-pause" class="nav-link text-light na">{% icon 'pause' %}</a></div>
-      </div>
-{% endif %}
+    {% block controls %}
 
-      {% endblock %}
+      <div class="row">
+        {% if object.status == 'N' %}
+          {% include 'partial/controls/new.html' %}
+        {% elif object.status == 'R' or object.status == 'P' %}
+          {% include 'partial/controls/running.html' %}
+        {% else %}
+          {% include 'partial/controls/finalized.html' %}
+        {% endif %}
+      </div>
+
+    {% endblock %}
+
       <hr/>
+
     </div>
-    <div class="col-9 bg-light"><div class="row p-2"><div class="col">
+    <div class="col-10 bg-light"><div class="row p-2"><div class="col">
           Text B
     </div></div></div>
+
   </div>
 </div>
 
