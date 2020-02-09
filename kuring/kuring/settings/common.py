@@ -154,7 +154,6 @@ class ConfigurationBuilder():
             'django.contrib.sites',
             'django.contrib.staticfiles',
             ### Dependencies
-            'django_celery_results',
             'bootstrap4',
             'django_icons',
             'channels',

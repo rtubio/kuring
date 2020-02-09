@@ -169,16 +169,15 @@ mkdir -p "$STATIC_DIR"
 # TODO # Remove if unnecessary: # mkdir -p "$CELERY_LOGS"
 
 # 1) Install Debian packages for DEVELOPMENT
-# add_extra_repositories
-# install_sys_packages
-# post_sys_install
+add_extra_repositories
+install_sys_packages
+post_sys_install
 
 # 2) Setup virtual environment for DEVELOPMENT
-# install_env_packages
+install_env_packages
 
 # 3) Setup influxDB and REDIS
 install_influxdb
-exit 0
 install_redis
 
 # 4) Configure Django
