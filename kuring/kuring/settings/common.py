@@ -39,7 +39,7 @@ class ConfigurationBuilder():
     def logger(self):
         """This function creates a basic logging object."""
 
-        return {
+        self.config['LOGGING'] = {
             'version': 1,
             'disable_existing_loggers': False,
             'filters': {
@@ -153,7 +153,7 @@ class ConfigurationBuilder():
             'django.contrib.messages',
             'django.contrib.sites',
             'django.contrib.staticfiles',
-            ### Dependencies
+            ### deps
             'bootstrap4',
             'django_icons',
             'channels',
@@ -196,13 +196,22 @@ class ConfigurationBuilder():
             {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
         ]
 
+
+        self.config['CHANNEL_LAYERS'] = {
+            'default': {
+                'BACKEND': 'channels_redis.core.RedisChannelLayer',
+                'CONFIG': {
+                    'hosts': [('127.0.0.1', 6379),],
+                },
+            },
+        }
+
         # Extra static file directories, outside of the common 'static' for all apps
         # https://docs.djangoproject.com/en/3.0/howto/static-files/
         self.config['STATICFILES_DIRS'] = [
             os.path.join(self.config['BASE_DIR'], "kuring", "static"),
         ]
 
-        self.config['LOGGING'] = self.logger()
-
+        self.logger()
         self.database()
         self.celery()

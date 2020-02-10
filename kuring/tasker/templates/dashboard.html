@@ -12,11 +12,11 @@
 
   {% if object_list %}
     <div class="container">
-    {% for o in object_list %}
+    {% for object in object_list %}
       <div class="row text-center p-3 mb-2 bg-secondary text-white">
-        <div class="col-7"><a class=" text-white" href="{% url 'detailTask' o.pk %}">{{ o.name }}</a></div>
-        <div class="col-4 font-weight-normal">{{ o.date|date:"SHORT_DATETIME_FORMAT" }}</div>
-        <div class="col-1 font-weight-normal">{{ o.status|status }}</div>
+        <div class="col-7"><a class=" text-white" href="{% url 'detailTask' object.pk %}">{{ object.name }}</a></div>
+        <div class="col-4 font-weight-normal">{{ object.created|date:"SHORT_DATETIME_FORMAT" }}</div>
+        <div class="col-1 font-weight-normal">{{ object.status|status }}</div>
       </div>
     {% endfor %}
     </div>

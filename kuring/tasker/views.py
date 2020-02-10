@@ -4,7 +4,8 @@ from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
 
-from tasker import models
+from kuring.celery import app as celeryApp
+from tasker import models, tasks
 
 
 class TaskDashboard(ListView):
@@ -49,9 +50,15 @@ class RunTask(DetailView):
     template_name = 'detailTask.html'
 
     def get_object(self):
+
         obj = super().get_object()
         obj.status = models.Task.RUNNING
         obj.save()
+
+        task_obj = tasks.add.delay(2, 3)
+        obj.task_id = task_obj.id
+        obj.save()
+
         return obj
 
 
@@ -61,7 +68,13 @@ class StopTask(DetailView):
     template_name = 'detailTask.html'
 
     def get_object(self):
+
         obj = super().get_object()
+
+        celeryApp.control.revoke(obj.task_id, terminate=True)
+
         obj.status = models.Task.FINISHED
+        obj.task_id = None
         obj.save()
+
         return obj
