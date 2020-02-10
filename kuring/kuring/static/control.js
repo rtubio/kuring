@@ -1,8 +1,13 @@
-var url = "ws://localhost:8000/control";
-var __wsock = new WebSocket(url);
+var task_id = getTaskId();
+var url = "ws://localhost:8000/ws/tasker/" + task_id;
+var __wsock;
+
+cleanLog();
+log('Opening websocket to: ' + url);
+__wsock = new WebSocket(url);
 
 __wsock.onopen = function() {
-  log('ws::CONNECTED to : ' + url + '\n')
+  log('ws::CONNECTED to: ' + url)
 };
 
 __wsock.onmessage = function (evt)
@@ -13,13 +18,26 @@ __wsock.onmessage = function (evt)
 
 __wsock.onclose = function()
 {
-  log('ws::DISCONNECTED from : ' + url);
+  log('ws::DISCONNECTED from: ' + url);
+};
+
+__wsock.onerror = function(evt)
+{
+  log('ws::ERROR: ' + evt.data);
 };
 
 function requestData() {
   ws.send("get-data");
 }
 
+function cleanLog () {
+  document.querySelector('#console').value = '';
+}
+
 function log (message) {
   document.querySelector('#console').value += (message  + '\n');
+}
+
+function getTaskId () {
+  return document.getElementById('taskId').innerHTML;
 }
