@@ -210,6 +210,10 @@ class ConfigurationBuilder():
         # https://docs.djangoproject.com/en/3.0/howto/static-files/
         self.config['STATICFILES_DIRS'] = [
             os.path.join(self.config['BASE_DIR'], "kuring", "static"),
+            os.path.join(self.config['BASE_DIR'], "..", "node_modules", "bootstrap", "dist"),
+            os.path.join(self.config['BASE_DIR'], "..", "node_modules", "font-awesome"),
+            os.path.join(self.config['BASE_DIR'], "..", "node_modules", "plotly.js-dist"),
+            os.path.join(self.config['BASE_DIR'], "..", "node_modules", "jquery", "dist"),
         ]
 
         self.logger()

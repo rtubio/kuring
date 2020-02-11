@@ -51,15 +51,16 @@ class RunTask(DetailView):
 
     def get_object(self):
 
-        obj = super().get_object()
-        obj.status = models.Task.RUNNING
-        obj.save()
+        object = super().get_object()
 
-        task_obj = tasks.add.delay(2, 3)
-        obj.task_id = task_obj.id
-        obj.save()
+        if object.status == models.Task.RUNNING and not object.task_id:
 
-        return obj
+            object.status = models.Task.RUNNING
+            task_obj = tasks.add.delay(2, 3)
+            object.task_id = task_obj.id
+            object.save()
+
+        return object
 
 
 class StopTask(DetailView):

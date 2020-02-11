@@ -12,3 +12,8 @@ virtualenv
 
 # Docker
 docker-ce
+
+# NodeJS / NPM
+build-essential
+nodejs
+npm

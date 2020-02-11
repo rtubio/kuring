@@ -10,7 +10,7 @@
 {% include 'partial/confirmRun.html' %}
 {% include 'partial/confirmStop.html' %}
 
-<div id="taskId">{{ object.pk }}</div>
+<div class="invisible" id="taskId">{{ object.pk }}</div>
 
 <div class="container-sl">
   <div class="row">
@@ -64,6 +64,6 @@
 </div>
 
 <script type="text/javascript" src="{% static 'control.js' %}"></script>
-<script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript" src="{% static 'plotly.js'%}"></script>
 
 {% endblock %}

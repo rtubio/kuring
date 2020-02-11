@@ -1,9 +1,9 @@
 var task_id = getTaskId();
-var url = "ws://localhost:8000/ws/tasker/" + task_id;
+var url = "ws://" + window.location.host + "/ws/tasker/" + task_id + '/';
 var __wsock;
 
 cleanLog();
-log('Opening websocket to: ' + url);
+log('ws::OPEN to: ' + url);
 __wsock = new WebSocket(url);
 
 __wsock.onopen = function() {

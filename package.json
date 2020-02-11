@@ -1,0 +1,33 @@
+{
+  "name": "karbon-kuring",
+  "version": "1.0.0",
+  "description": "Kuring app's Javascript depedencies",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rtubio/kuring.git"
+  },
+  "keywords": [
+    "Django",
+    "w/websockets",
+    "Arduino",
+    "control"
+  ],
+  "author": "Ricardo Tubio-Pardavila",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rtubio/kuring/issues"
+  },
+  "homepage": "https://github.com/rtubio/kuring#readme",
+  "dependencies": {
+    "bootstrap": "^4.4.1",
+    "font-awesome": "^4.7.0",
+    "jquery": "^3.4.1",
+    "plotly.js-dist": "^1.52.2",
+    "popper": "^1.0.1"
+  },
+  "devDependencies": {}
+}
