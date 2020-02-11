@@ -53,7 +53,7 @@ class RunTask(DetailView):
 
         object = super().get_object()
 
-        if object.status == models.Task.RUNNING and not object.task_id:
+        if object.status == models.Task.NEW and not object.task_id:
 
             object.status = models.Task.RUNNING
             task_obj = tasks.add.delay(2, 3)

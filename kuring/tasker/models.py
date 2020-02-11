@@ -1,6 +1,25 @@
+import json
+import logging
+
 from datetime import datetime
 from django.db import models
 from django.urls import reverse
+from django.dispatch import receiver
+from django.core.serializers.json import DjangoJSONEncoder
+
+from tasker import signals
+
+logger = logging.getLogger(__name__)
+
+
+@receiver(signals.taskFinished)
+def taskFinished(sender, taskId=None, results=None, **kwargs):
+    logger.info(f"Task finished! Signal received from {sender}")
+
+    object = Task.objects.get(task_id=taskId)
+    object.status = Task.FINISHED
+    object.results = json.dumps(results, cls=DjangoJSONEncoder)
+    object.save()
 
 
 class Task(models.Model):
@@ -34,6 +53,8 @@ class Task(models.Model):
         default='', max_length=255, null=True, blank=True, editable=False,
         verbose_name="Identifier of the task launched with Celery for the experiment execution"
     )
+
+    result = models.TextField(default='', blank=False, verbose_name="Task result, serialized JSON object")
 
     def get_absolute_url(self):
         return reverse('dashboard')
