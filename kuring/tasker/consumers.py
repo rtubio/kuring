@@ -1,10 +1,17 @@
-from channels.generic.websocket import WebsocketConsumer
+
+from asgiref.sync import async_to_sync
+from channels.generic import websocket
 import json
 
 
-class Tasker(WebsocketConsumer):
+class Tasker(websocket.WebsocketConsumer):
+
+    chGroup = 'kuring'
+    chName = 'tasker'
 
     def connect(self):
+
+        async_to_sync(self.channel_layer.group_add)(self.chGroup, self.chName)
         self.accept()
 
     def disconnect(self, close_code):
@@ -15,4 +22,7 @@ class Tasker(WebsocketConsumer):
         type = message['type']
 
         if type == 'ping':
-            self.send(text_data=json.dumps({'type': 'pong'}))
+            self.sendMessage({'type': 'pong'})
+
+    def sendMessage(self, message):
+        self.send(text_data=json.dumps({'message': message}))

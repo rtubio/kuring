@@ -8,10 +8,10 @@ var KEEPALIVE = 20000;    // 20s keepalive
 
 __init__();
 
-__wsock.onopen = function() { log('ws::CONNECTED to: ' + url); updateWsStatus(true); };
+__wsock.onopen = function() { log('ws::CONNECTED to: ' + window.location.host); updateWsStatus(true); };
 __wsock.onerror = function(evt) { log('ws::ERROR: ' + evt.data); };
 __wsock.onmessage = function (evt) { var data = JSON.parse(evt.data); decodeMessage(data); };
-__wsock.onclose = function() { updateWsStatus(false); log('ws::[WARN] Reconecting...'); __wsock = new WebSocket(url); };
+__wsock.onclose = function() { updateWsStatus(false); log('ws::ERROR: connection lost'); };
 
 
 async function sendMessage(ws, message, count) {
@@ -20,8 +20,10 @@ async function sendMessage(ws, message, count) {
 }
 
 
-function decodeMessage(data) {
+function decodeMessage(message) {
   __pingReset += 1;
+  data = message['message'];
+  console.log('data = ' + JSON.stringify(data));
   if (data['type'] == 'pong') { log('ws::INFO: pong!'); return; }
   if (data['type'] == 'info') { log('ws::INFO:' + str(data['message'])); return; }
   if (data['type'] == 'plot') { m = data['m']; x = data['x']; y = data['y'];
@@ -40,8 +42,7 @@ function pingServer() {
 
 
 function __init__ () {
-  updateWsStatus(false);
-  cleanLog(); log('ws::OPEN to: ' + url);
+  updateWsStatus(false); cleanLog();
   __wsock = new WebSocket(url);
   __pingAlarm = window.setInterval(pingServer, KEEPALIVE);   // every 5 seconds, ping...
 }
@@ -51,9 +52,7 @@ function log (message) {
 }
 
 function updateWsStatus (status) {
-  var text = 'OFF';
-  __wsStatus = status;
-  if (__wsStatus) { text = 'ON'; }
+  var text = 'OFF'; __wsStatus = status; if (__wsStatus) { text = 'ON'; }
   document.getElementById('wsStatus').innerHTML = text;
 }
 
