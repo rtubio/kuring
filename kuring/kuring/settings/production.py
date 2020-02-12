@@ -7,11 +7,12 @@ import kuring.settings.common as settings
 ALLOWED_HOSTS = []
 DBCONFIG = '../.__skr__/db.json'
 DEBUG = True
-LOG_LEVEL = 'INFO'
 MODE = 'Production Mode'
+
+logging.basicConfig(level=logging.INFO)
 
 settings.configurationConstructor(
     sys.modules[__name__],
     str(__file__).split('.')[0].split('/')[-1],
-    DEBUG, ALLOWED_HOSTS, DBCONFIG, LOG_LEVEL
+    DEBUG, ALLOWED_HOSTS, DBCONFIG
 )

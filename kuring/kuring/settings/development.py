@@ -1,4 +1,5 @@
 
+import logging
 import sys
 import kuring.settings.common as settings
 
@@ -7,11 +8,12 @@ import kuring.settings.common as settings
 ALLOWED_HOSTS = []
 DBCONFIG = '../config/db-dev.json'
 DEBUG = True
-LOG_LEVEL = 'INFO'
 MODE = 'Development Mode'
+
+logging.basicConfig(level=logging.DEBUG)
 
 settings.configurationConstructor(
     sys.modules[__name__],
     str(__file__).split('.')[0].split('/')[-1],
-    DEBUG, ALLOWED_HOSTS, DBCONFIG, LOG_LEVEL
+    DEBUG, ALLOWED_HOSTS, DBCONFIG
 )

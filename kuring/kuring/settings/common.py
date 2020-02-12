@@ -7,9 +7,9 @@ import sys
 """Django COMMON settings for kuring project."""
 
 
-def configurationConstructor(module, mode, debug, hosts, databaseConfig, logLevel):
+def configurationConstructor(module, mode, debug, hosts, databaseConfig):
 
-    builder = ConfigurationBuilder(mode, debug, hosts, databaseConfig, logLevel)
+    builder = ConfigurationBuilder(mode, debug, hosts, databaseConfig)
 
     for k in builder.config:
         setattr(module, k, builder.config[k])
@@ -18,61 +18,21 @@ def configurationConstructor(module, mode, debug, hosts, databaseConfig, logLeve
 class ConfigurationBuilder():
 
 
-    def __init__(self, mode, debug, hosts, databaseConfig, logLevel):
+    def __init__(self, mode, debug, hosts, databaseConfig):
         """Basic constructor"""
         self.mode = mode
         self.debug = debug
         self.hosts = hosts
         self.dbconfig = databaseConfig
-        self.loglevel = logLevel
         self.config = {}
 
-        self.buildConfig()
+        self.build()
 
 
     def print(self):
         """This function prints a basic configuration status message."""
         print(f"> mode: {self.mode}, debug ({self.debug}), hosts ({self.hosts}), loglevel ({self.loglevel})")
         print(f"> BASE_DIR ({BASE_DIR}), STATIC_ROOT ({STATIC_ROOT})")
-
-
-    def logger(self):
-        """This function creates a basic logging object."""
-
-        self.config['LOGGING'] = {
-            'version': 1,
-            'disable_existing_loggers': False,
-            'filters': {
-                'require_debug_false': {
-                    '()': 'django.utils.log.RequireDebugFalse'
-                }
-            },
-            'formatters': {
-                'verbose': {
-                    'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s'
-                }
-            },
-            'handlers': {
-                'console': {
-                    'level': self.loglevel,
-                    'class': 'logging.StreamHandler',
-                    'stream': sys.stdout,
-                    'formatter': 'verbose'
-                }
-            },
-            'loggers': {
-                'django':{
-                    'level': self.loglevel,
-                    'handlers': ['console'],
-                    'propagate': True,
-                },
-               'gunicorn.errors': {
-                    'level': self.loglevel,
-                    'handlers': ['console'],
-                    'propagate': True,
-                }
-            },
-        }
 
 
     def database(self):
@@ -113,7 +73,7 @@ class ConfigurationBuilder():
         self.config['CELERY_RESULT_SERIALIZER'] = celery_cfg['result-serializer']
 
 
-    def buildConfig(self):
+    def build(self):
 
         # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
         self.config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(os.path.join(__file__, '../.'))))
@@ -216,6 +176,5 @@ class ConfigurationBuilder():
             os.path.join(self.config['BASE_DIR'], "..", "node_modules", "jquery", "dist"),
         ]
 
-        self.logger()
         self.database()
         self.celery()
