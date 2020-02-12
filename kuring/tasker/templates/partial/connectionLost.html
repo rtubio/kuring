@@ -1,0 +1,14 @@
+{% load icons %}
+
+<div class="modal fade" id="informConnLost" tabindex="-1" role="dialog" aria-labelledby="stop" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <span aria-hidden="true">The connection has been lost, please check your Internet connection.</span>
+      </div>
+      <div class="modal-footer">
+        <a type="button" class="btn btn-info" href="{% url 'detailTask' object.pk %}">{% icon 'angle-double-up' %}</a>
+      </div>
+    </div>
+  </div>
+</div>

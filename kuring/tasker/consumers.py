@@ -1,14 +1,20 @@
 
 from asgiref.sync import async_to_sync
 from channels.generic import websocket
-import logging
+from django.conf import settings
+from influxdb import InfluxDBClient
 import json
+import logging
 
 
 logger = logging.getLogger(__name__)
 
 
 class Tasker(websocket.AsyncJsonWebsocketConsumer):
+
+    def __init__(self, *args, **kwargs):
+        self.influxdb = settings.INFLUXDB
+        return super(Tasker, self).__init__(*args, **kwargs)
 
     async def connect(self):
         await self.channel_layer.group_add('kuring', self.channel_name)
@@ -28,5 +34,7 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
         await self.send(text_data=json.dumps({'message': message}))
 
     async def plot_data(self, event):
-        logger.debug(f'Received event = {event}')
+        await self.sendMessage(event)
+
+    async def task_finished(self, event):
         await self.sendMessage(event)

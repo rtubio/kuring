@@ -10,7 +10,7 @@ DBCONFIG = '../config/db-dev.json'
 DEBUG = True
 MODE = 'Development Mode'
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARN)
 
 settings.configurationConstructor(
     sys.modules[__name__],

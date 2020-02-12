@@ -1,0 +1,14 @@
+{% load icons %}
+
+<div class="modal fade" id="taskFinished" tabindex="-1" role="dialog" aria-labelledby="stop" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <span aria-hidden="true">Task execution has finished.</span>
+      </div>
+      <div class="modal-footer">
+        <a type="button" class="btn btn-info" href="{% url 'detailTask' object.pk %}">{% icon 'angle-double-up' %}</a>
+      </div>
+    </div>
+  </div>
+</div>
