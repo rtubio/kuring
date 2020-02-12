@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class Tasker(websocket.AsyncJsonWebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
-        self.influxdb = settings.INFLUXDB
+        # self.influxdb = settings.INFLUXDB
         return super(Tasker, self).__init__(*args, **kwargs)
 
     async def connect(self):
