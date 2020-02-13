@@ -14,6 +14,7 @@ def configurationConstructor(module, mode, debug, hosts, databaseConfig):
     for k in builder.config:
         setattr(module, k, builder.config[k])
 
+    return builder
 
 class ConfigurationBuilder():
 
@@ -26,13 +27,15 @@ class ConfigurationBuilder():
         self.dbconfig = databaseConfig
         self.config = {}
 
-        self.build()
+        self.django()
+        self.database()
+        self.celery()
+        self.influxdb()
 
 
-    def print(self):
+    def __unicode__(self):
         """This function prints a basic configuration status message."""
-        print(f"> mode: {self.mode}, debug ({self.debug}), hosts ({self.hosts}), loglevel ({self.loglevel})")
-        print(f"> BASE_DIR ({BASE_DIR}), STATIC_ROOT ({STATIC_ROOT})")
+        return(f"> {self.mode}|{self.debug} :: hosts ({self.hosts}), BASE ({BASE_DIR}), STATIC ({STATIC_ROOT})")
 
 
     def database(self):
@@ -73,7 +76,20 @@ class ConfigurationBuilder():
         self.config['CELERY_RESULT_SERIALIZER'] = celery_cfg['result-serializer']
 
 
-    def build(self):
+    def influxdb(self, config='../.__skr__/influxdb.json'):
+        """This function loads the configuration for InfluxDB from a given file"""
+
+        # ### INFLUXDB configuration
+        with open(config) as file:
+            cfg = json.load(file)
+
+        self.config['INFLUXDB_DBNAME'] = cfg['dbnx']
+        self.config['INFLUXDB_ADMINPWD'] = cfg['admp']
+        self.config['INFLUXDB_USRNAME'] = cfg['usrn']
+        self.config['INFLUXDB_USRPWD'] = cfg['usrp']
+
+
+    def django(self):
 
         # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
         self.config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(os.path.join(__file__, '../.'))))
@@ -175,6 +191,3 @@ class ConfigurationBuilder():
             os.path.join(self.config['BASE_DIR'], "..", "node_modules", "plotly.js-dist"),
             os.path.join(self.config['BASE_DIR'], "..", "node_modules", "jquery", "dist"),
         ]
-
-        self.database()
-        self.celery()

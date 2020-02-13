@@ -11,7 +11,7 @@ usrpass = sys.argv[3]
 admname = sys.argv[4]
 admpass = sys.argv[5]
 
-print(f"> admname={admname}, admpass={admpass}, usrname={usrname}, usrpass={usrpass}")
+print(f">>> admname={admname}, admpass={admpass}, usrname={usrname}, usrpass={usrpass}")
 
 RETRYTIME = 50              # 50 seconds in between connection attempts
 connection_retries = 5      # maximum number of connection attempts

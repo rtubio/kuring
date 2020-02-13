@@ -57,9 +57,8 @@ create_influxdb_secret () {
   \"admp\": \"$2\",
   \"usrn\": \"$3\",
   \"usrp\": \"$4\",
-  \"dbnx\": \"$5\",
-}
-  "
+  \"dbnx\": \"$5\"
+}"
   echo "$filestr" > "$1"
 }
 
@@ -100,7 +99,7 @@ install_influxdb () {
   }
   usrpass="$password"
 
-  echo "dbname=$dbname,admpass=$admpass,usrname=$usrname,usrpass=$usrpass,"
+  echo "dbname=$dbname,admpass=$admpass,usrname=$usrname,usrpass=$usrpass"
 
   docker run \
       -e INFLUXDB_HTTP_AUTH_ENABLED=true\
@@ -131,7 +130,7 @@ install_influxdb () {
 
   python "$influxdb_py" "$dbname" "$usrname" "$usrpass" "admin" "$admpass"
 
-  create_influxdb_secret "$SECRETS_INFLUXDB" "$admpass" "$idbname" "$idbpass" "$idbdbname"
+  create_influxdb_secret "$SECRETS_INFLUXDB" "$admpass" "$usrname" "$usrpass" "$dbname"
 
 }
 
