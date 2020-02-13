@@ -6,7 +6,7 @@ import logging
 _l = logging.getLogger(__name__)
 
 
-""" JSON body example
+""" JSON body example, taken from: https://influxdb-python.readthedocs.io/en/latest/examples.html
         json_body = [{
             "measurement": "test#cpu_load_short",
             "tags": {
@@ -26,7 +26,7 @@ _l = logging.getLogger(__name__)
 
 class CuringOven(object):
     """
-    This object acts as an interface
+    This object acts as an interface with the InfluxDB database for the data coming from the curing oven.
     """
 
 
@@ -36,11 +36,27 @@ class CuringOven(object):
     @staticmethod
     def retrieve(taskId):
         if taskId in CuringOven._clients:
+            _l.debug(f"Retrieving client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
             return CuringOven._clients[taskId]
 
         oven = CuringOven(taskId)
         CuringOven._clients[taskId] = oven
+        _l.info(f"Added client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
         return oven
+
+
+    @staticmethod
+    def cleanup(taskId):
+        _l.info(f"Removing client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
+        try:
+            oven = CuringOven._clients.pop(taskId)
+            oven.close()
+            oven = None
+            _l.info(f"Removed client for task #{taskId}")
+        except KeyError as ex:
+            _l.warn(f"Exception = {ex}")
+            _l.warn(f"No client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}, skipping...")
+            return
 
 
     def __init__(self, taskId):

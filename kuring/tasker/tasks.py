@@ -12,14 +12,14 @@ from common import influxdb
 from tasker import signals
 
 
-COUNTER_MAX = 2000
+COUNTER_MAX = 5
 _l = get_task_logger(__name__)
 layer = channels.layers.get_channel_layer()
 
 
 @shared_task
 def influxdbWrite(taskId, message):
-    _l.info(f"Writing to influxdb: {message}")
+    _l.debug(f"Writing to influxdb: {message}")
     ovendb = influxdb.CuringOven.retrieve(taskId)
     ovendb.writePoint(message['m'], message['x'], message['y'])
 
@@ -27,7 +27,6 @@ def influxdbWrite(taskId, message):
 @shared_task(bind=True)
 def collectData(self, counter=COUNTER_MAX):
     task_id = self.request.id
-    influxOvenDB = influxdb.CuringOven(task_id)
     async_to_sync(layer.group_add)('kuring', f'task_{task_id}')
 
     _l.info(f'Starting task (id = {task_id})')
@@ -57,3 +56,4 @@ def collectData(self, counter=COUNTER_MAX):
     message = { 'type': 'task.finished', 'task_id': task_id, 'timestamp': timestamp }
     async_to_sync(layer.group_send)('kuring', message)
     async_to_sync(layer.group_discard)('kuring', 'tasker')
+    influxdb.CuringOven.cleanup(task_id)
