@@ -1,4 +1,6 @@
+
 import importlib.util
+import logging
 import json
 import os
 import sys
@@ -10,32 +12,60 @@ import sys
 def configurationConstructor(module, mode, debug, hosts, databaseConfig):
 
     builder = ConfigurationBuilder(mode, debug, hosts, databaseConfig)
-
     for k in builder.config:
         setattr(module, k, builder.config[k])
-
     return builder
+
 
 class ConfigurationBuilder():
 
 
-    def __init__(self, mode, debug, hosts, databaseConfig):
+    def __init__(self, mode, debug, hosts, databaseConfig, loglevel='INFO'):
         """Basic constructor"""
         self.mode = mode
         self.debug = debug
         self.hosts = hosts
         self.dbconfig = databaseConfig
         self.config = {}
+        self.loglevel = loglevel
 
+        self.logger()
         self.django()
         self.database()
         self.celery()
         self.influxdb()
 
 
-    def __unicode__(self):
+    def __str__(self):
         """This function prints a basic configuration status message."""
-        return(f"> {self.mode}|{self.debug} :: hosts ({self.hosts}), BASE ({BASE_DIR}), STATIC ({STATIC_ROOT})")
+        return(f"> {self.mode}|{self.debug} :: hosts ({self.hosts})")
+
+    def logger(self):
+        """Django logger configuraiton"""
+        # ### Logging settings
+        self.config['LOGGING'] = {
+            'version': 1,
+            'disable_existing_loggers': False,
+            'formatters': {
+                'verbose': {
+                    'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+                    'style': '{',
+                },
+            },
+            'handlers': {
+                'console': {
+                    'level': self.loglevel,
+                    'class': 'logging.StreamHandler',
+                    'stream': sys.stdout,
+                    'formatter': 'verbose'
+                }
+            },
+            'loggers': {
+                'django':{'level': self.loglevel, 'handlers': ['console'], 'propagate': True},
+                'kuring':{'level': self.loglevel, 'handlers': ['console'], 'propagate': True},
+                'tasker':{'level': self.loglevel, 'handlers': ['console'], 'propagate': True}
+            }
+        }
 
 
     def database(self):

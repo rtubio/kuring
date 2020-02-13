@@ -1,5 +1,6 @@
-
+import logging
 import sys
+
 import kuring.settings.common as settings
 
 """Django PRODUCTION settings for kuring project."""

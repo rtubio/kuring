@@ -56,7 +56,7 @@ class RunTask(DetailView):
         if object.status == models.Task.NEW and not object.task_id:
 
             object.status = models.Task.RUNNING
-            task_obj = tasks.add.delay(2, 3)
+            task_obj = tasks.collectData.delay()
             object.task_id = task_obj.id
             object.save()
 

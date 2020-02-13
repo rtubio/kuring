@@ -38,6 +38,7 @@ while True:
 
 client.create_user(usrname, usrpass)
 client.create_database(dbname)
+client.grant_privilege('all', dbname, usrname)
 
 print(f"> List of registered users: {client.get_list_users()}")
 print(f"> List of registered databases: {client.get_list_database()}")

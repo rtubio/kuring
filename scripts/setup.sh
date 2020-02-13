@@ -107,6 +107,8 @@ install_influxdb () {
       --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach \
       influxdb:alpine
 
+  docker run --name=kuring-influxui --publish=9999:80 --restart=always --detach sillydong/influxdb-ui
+
 # NOTE # It was not possible to make the configuration of InfluxDB using the recommended script included within the
 # docker image. The process has been altered and that script has been replaced by a Python script.
 #     # The commands are kept below for further reference.
@@ -168,16 +170,17 @@ mkdir -p "$STATIC_DIR"
 # TODO # Remove if unnecessary: # mkdir -p "$CELERY_LOGS"
 
 # 1) Install Debian packages for DEVELOPMENT
-add_extra_repositories
-install_sys_packages
-post_sys_install
+# add_extra_repositories
+# install_sys_packages
+# post_sys_install
 
 # 2) Setup virtual environment for DEVELOPMENT
-install_env_packages
+# install_env_packages
 
 # 3) Setup influxDB and REDIS
 install_influxdb
 install_redis
+exit -1
 
 # 4) Configure Django
 source "$VENV_ACTIVATE"
