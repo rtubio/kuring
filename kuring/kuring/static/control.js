@@ -30,10 +30,12 @@ var KEEPALIVE = 50000;    // 50s keepalive
 __init__();
 
 
-$("#delOk").click(function(e) { __navigating = true; console.log('X'); });
-$("#runOk").click(function(e) { __navigating = true; console.log('X'); });
-$("#stopOk").click(function(e) { __navigating = true; console.log('X'); });
-$("#endOk").click(function(e) { __navigating = true; console.log('X'); });
+$(document).ready(function(){
+  $("#delOk").click(function(e) { __navigating = true; });
+  $("#runOk").click(function(e) { __navigating = true; });
+  $("#stopOk").click(function(e) { __navigating = true; });
+  $("#endOk").click(function(e) { __navigating = true; });
+});
 
 __wsock.onopen = function() { log('INF', 'CONNECTED to: ' + window.location.host); updateWsStatus(true); };
 __wsock.onerror = function(evt) { log('ERR', evt.data); };
