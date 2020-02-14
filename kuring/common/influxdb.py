@@ -82,6 +82,17 @@ class CuringOven(object):
             'O1': {'sensor': 'frame', 'variable': 'open', 'units': 'yes/no'}
         }
 
+    def getMeasurement(self, sensorId, since=None, until=None):
+        """
+        This function returns a full measurement series taken by a given sensor, in between two specific points in
+        time.
+
+        sensorId -- predefined sensor identifier
+        since=None -- (optional) timestamp describing the point after which the sensor data is required.
+        until=None -- (optional) timestamp describing the point until which the sensor data is required.
+        """
+        tags = self.id_2_tags[sensorId]
+
 
     def writePoint(self, sensorId, timestamp, value):
         tags = self.id_2_tags[sensorId]

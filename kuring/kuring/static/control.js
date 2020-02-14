@@ -31,7 +31,15 @@ __init__();
 __wsock.onopen = function() { log('INF', 'CONNECTED to: ' + window.location.host); updateWsStatus(true); };
 __wsock.onerror = function(evt) { log('ERR', evt.data); };
 __wsock.onmessage = function (evt) { var data = JSON.parse(evt.data); decodeMessage(data); };
-__wsock.onclose = function() { updateWsStatus(false); log('ERR', 'Connection lost'); $('#informConnLost').modal(); };
+
+
+__wsock.onclose = function() {
+  if ($('#taskFinished').hasClass('in') ||
+    $('#confirmStop').hasClass('in') || $('#confirmRun').hasClass('in') || $('#confirmRun').hasClass('in')) {
+    return;
+  }
+  updateWsStatus(false); log('ERR', 'Connection lost'); $('#informConnLost').modal();
+};
 
 
 async function sendMessage(ws, message, count) {
