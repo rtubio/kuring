@@ -13,6 +13,7 @@
 {% include 'partial/taskFinished.html' %}
 
 <div class="invisible" id="taskId">{{ object.pk }}</div>
+<div class="invisible" id="taskStatus">{{ object.status }}</div>
 
 <div class="container-sl">
   <div class="row">
@@ -20,7 +21,7 @@
       <hr/>
       <p class="text-capitalize">{{ object.name }}</p>
       <p class="font-weight-normal">{{ object.created|date:"SHORT_DATETIME_FORMAT" }}</p>
-      <p class="font-weight-normal">{{ object.status|status }}</p>
+      <p id="taskStatusLabel" class="font-weight-normal">{{ object.status|status }}</p>
       <hr/>
       <div class="row">
         <div class="col">
@@ -38,13 +39,17 @@
     {% block controls %}
 
       <div class="row">
-        {% if object.status == 'N' %}
-          {% include 'partial/controls/new.html' %}
-        {% elif object.status == 'R' or object.status == 'P' %}
-          {% include 'partial/controls/running.html' %}
-        {% else %}
-          {% include 'partial/controls/finalized.html' %}
-        {% endif %}
+        <div class="col">
+          <a id="db-run" class="nav-link text-light" href="#"
+              onclick="$('#confirmRun').modal();">{% icon 'play' %}</a>
+        </div>
+        <div class="col">
+          <a id="db-stop" class="nav-link text-light na" href="#"
+              onclick="$('#confirmStop').modal();">{% icon 'stop' %}</a>
+        </div>
+        <div class="col">
+          <a id="db-pause" class="nav-link text-light na" href="#">{% icon 'pause' %}</a>
+        </div>
       </div>
 
     {% endblock %}

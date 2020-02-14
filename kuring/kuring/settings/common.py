@@ -35,6 +35,8 @@ class ConfigurationBuilder():
         self.celery()
         self.influxdb()
 
+        # print(f"@@@@@ = {logging.config.dictConfig}")
+
 
     def __str__(self):
         """This function prints a basic configuration status message."""
@@ -48,7 +50,7 @@ class ConfigurationBuilder():
             'disable_existing_loggers': False,
             'formatters': {
                 'verbose': {
-                    'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+                    'format': '[{levelname} {asctime} {module} {process:d} {thread:d}] {message}',
                     'style': '{',
                 },
             },
@@ -56,14 +58,14 @@ class ConfigurationBuilder():
                 'console': {
                     'level': self.loglevel,
                     'class': 'logging.StreamHandler',
-                    'stream': sys.stdout,
-                    'formatter': 'verbose'
+                    # 'stream': sys.stdout,
+                    'formatter': 'verbose',
                 }
             },
             'loggers': {
-                'django':{'level': self.loglevel, 'handlers': ['console'], 'propagate': True},
-                'kuring':{'level': self.loglevel, 'handlers': ['console'], 'propagate': True},
-                'tasker':{'level': self.loglevel, 'handlers': ['console'], 'propagate': True}
+                'django':{'level': self.loglevel, 'handlers': ['console'], 'propagate': False},
+                'kuring':{'level': self.loglevel, 'handlers': ['console'], 'propagate': False},
+                'tasker':{'level': self.loglevel, 'handlers': ['console'], 'propagate': False}
             }
         }
 

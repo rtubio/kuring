@@ -1,25 +1,56 @@
 import json
 import logging
 
+from channels.db import database_sync_to_async
 from datetime import datetime
 from django.db import models
 from django.urls import reverse
 from django.dispatch import receiver
 from django.core.serializers.json import DjangoJSONEncoder
 
-from tasker import signals
+from tasker import signals, tasks
 
-logger = logging.getLogger(__name__)
+_l = logging.getLogger(__name__)
 
 
 @receiver(signals.taskFinished)
 def taskFinished(sender, taskId=None, results=None, **kwargs):
-    logger.info(f"Task finished! Signal received from {sender}")
-
+    _l.info(f"Task finished! Signal received from {sender}")
     object = Task.objects.get(task_id=taskId)
+
     object.status = Task.FINISHED
     object.results = json.dumps(results, cls=DjangoJSONEncoder)
+
     object.save()
+
+
+@database_sync_to_async
+def taskLaunched(taskId):
+    _l.info(f"Task #{taskId} launched!")
+    object = Task.objects.get(pk=taskId)
+
+    if object.status == Task.NEW and not object.task_id:
+        object.status = Task.RUNNING
+        task_obj = tasks.collectData.delay()
+        object.task_id = task_obj.id
+        object.save()
+
+    else:
+        _l.error('Trying to launch task #{taskId} but its satus is not ready')
+
+
+@database_sync_to_async
+def taskStopped(taskId):
+    _l.info(f"Task #{taskId} stopped!")
+    object = Task.objects.get(pk=taskId)
+
+    if object.status == Task.RUNNING and not object.task_id:
+        object.status = Task.FINISHED
+        obj.task_id = None
+        object.save()
+
+    else:
+        _l.error('Trying to stop task #{taskId} but its satus is not ready')
 
 
 class Task(models.Model):

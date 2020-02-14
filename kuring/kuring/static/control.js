@@ -1,14 +1,12 @@
-// general configuration
-var task_id = document.getElementById('taskId').innerHTML;
-var url = "ws://" + window.location.host + "/ws/tasker/" + task_id + '/';
+// ui configuration
+var task_status = $("#taskStatus").html();
 var datefmt = { hour: "2-digit", minute: "2-digit", second: "2-digit" };
-// plot.ly diagram configuraiton
-var __plot;
 var __plotId = 'graph1';
 var __plotData = {
   'T1': {x: [], y: [], mode: 'lines', line: { width: 3}, name: 'temp_1'},
   'T2': {x: [], y: [], mode: 'lines', line: { width: 3}, name: 'temp_2'},
 };
+var __navigating = false;   // flag that blocks the connection lost window from being launched during navigation
 var layout = {
   title: 'Curing Oven - Temperature Measurements',
   showlegend: true,
@@ -17,25 +15,18 @@ var layout = {
   xaxis: { title: { text: 'time (s)' }, range: [0, 600] },
   yaxis: { title: { text: 'Temperature (degC)' }, range: [-10, 150] }
 };
+var __plot = Plotly.newPlot(__plotId, [__plotData['T1'], __plotData['T2']], layout);;
+
 // websocket configuration
-var __wsock;
-var __wsStatus = false;
-var __pingAlarm;
-var __pingReset = 0;
-var __navigating = false;   // flag that blocks the connection lost window from being launched during navigation
+var task_id = $("#taskId").html();
+var url = "ws://" + window.location.host + "/ws/tasker/" + task_id + '/';
 
 var KEEPALIVE = 50000;    // 50s keepalive
+var __wsock = new WebSocket(url);
+var __wsStatus = false;
+var __pingAlarm = window.setInterval(pingServer, KEEPALIVE);   // every 5 seconds, ping...;
+var __pingReset = 0;
 
-
-__init__();
-
-
-$(document).ready(function(){
-  $("#delOk").click(function(e) { __navigating = true; });
-  $("#runOk").click(function(e) { __navigating = true; });
-  $("#stopOk").click(function(e) { __navigating = true; });
-  $("#endOk").click(function(e) { __navigating = true; });
-});
 
 __wsock.onopen = function() { log('INF', 'CONNECTED to: ' + window.location.host); updateWsStatus(true); };
 __wsock.onerror = function(evt) { log('ERR', evt.data); };
@@ -74,27 +65,59 @@ function pingServer() {
 }
 
 
-function __init__ () {
+$(document).ready(function(){
+
+  $("#runOk").click(function(e) {
+    $("#confirmRun").modal('toggle');
+    sendMessage(__wsock, {'type': 'runTask', 'taskId': task_id});
+    setControlsRunning(); log('Task launched');
+  });
+  $("#stopOk").click(function(e) {
+    $("#confirmStop").modal('toggle');
+    sendMessage(__wsock, {'type': 'stopTask', 'taskId': task_id});
+    setControlsFinished(); log('Task stopped');
+  });
+  $("#endOk").click(function(e) { $("#taskFinished").modal('toggle'); setControlsFinished(); log('Task finished!'); });
+
   updateWsStatus(false);
   cleanLog();
-  __wsock = new WebSocket(url);
-  __pingAlarm = window.setInterval(pingServer, KEEPALIVE);   // every 5 seconds, ping...
-  __plot = Plotly.newPlot(__plotId, [__plotData['T1'], __plotData['T2']], layout);
+  log('INF', "Loading task #" + task_id + ", state = " + task_status);
+  setControls();
+
+});
+
+
+function setControls () {
+  if (task_status == "N") { setControlsNew(); return; }
+  if (task_status == "R") { setControlsRunning(); return; }
+  setControlsFinished();
+}
+
+function setControlsNew () {
+  $("#db-run").removeClass('na'); $("#db-stop").addClass('na'); $("#db-pause").addClass('na');
+  $("#taskStatusLabel").html("New");
+}
+function setControlsRunning () {
+  $("#db-run").addClass('na'); $("#db-stop").removeClass('na'); // TODO :: $("#db-pause").removeClass('na');
+  $("#taskStatusLabel").html("Running");
+}
+function setControlsFinished () {
+  $("#db-run").addClass('na'); $("#db-stop").addClass('na'); $("#db-pause").addClass('na');
+  $("#taskStatusLabel").html("Finished");
 }
 
 
-function cleanLog () { document.getElementById('console').value = ''; }
+function cleanLog () { $('#console').val(''); }
 
 
 function log (level, message) {
   var date = new Date();
   var timestr = date.toLocaleTimeString("es-ES", datefmt);
   text = '[' + timestr + ',' + level + ']: ' + message + '\n';
-  document.getElementById('console').value = (text) + document.getElementById('console').value;
+  $('#console').val((text) + $('#console').val());
 }
 
 
 function updateWsStatus (status) {
-  var text = 'OFF'; __wsStatus = status; if (__wsStatus) { text = 'ON'; }
-  document.getElementById('wsStatus').innerHTML = text;
+  var text = 'OFF'; __wsStatus = status; if (__wsStatus) { text = 'ON'; } $('#wsStatus').html(text);
 }

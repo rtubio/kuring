@@ -15,6 +15,4 @@ builder = settings.configurationConstructor(
     DEBUG, ALLOWED_HOSTS, DBCONFIG
 )
 
-print(f"__name__ = {__name__}")
 _l = logging.getLogger(__name__)
-_l.info(f"settings - {builder}")
