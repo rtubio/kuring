@@ -7,7 +7,7 @@
         <span aria-hidden="true">Are you sure that you want to STOP this task?</span>
       </div>
       <div class="modal-footer">
-        <a type="button" class="btn btn-danger" href="{% url 'stopTask' object.pk %}">{% icon 'stop' %}</a>
+        <a id="stopOk" type="button" class="btn btn-danger" href="{% url 'stopTask' object.pk %}">{% icon 'stop' %}</a>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">{% icon 'times' %}</button>
       </div>
     </div>

@@ -7,7 +7,7 @@
         <span aria-hidden="true">Are you sure that you want to PERMANENTLY delete this task?</span>
       </div>
       <div class="modal-footer">
-        <a type="button" class="btn btn-danger" href="{% url 'deleteTask' object.pk %}">{% icon 'trash' %}</a>
+        <a id="delOk" type="button" class="btn btn-danger" href="{% url 'deleteTask' object.pk %}">{% icon 'trash' %}</a>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">{% icon 'times' %}</button>
       </div>
     </div>

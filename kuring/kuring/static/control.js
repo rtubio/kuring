@@ -22,22 +22,24 @@ var __wsock;
 var __wsStatus = false;
 var __pingAlarm;
 var __pingReset = 0;
+var __navigating = false;   // flag that blocks the connection lost window from being launched during navigation
+
 var KEEPALIVE = 50000;    // 50s keepalive
 
 
 __init__();
 
 
+$("#delOk").click(function(e) { __navigating = true; console.log('X'); });
+$("#runOk").click(function(e) { __navigating = true; console.log('X'); });
+$("#stopOk").click(function(e) { __navigating = true; console.log('X'); });
+$("#endOk").click(function(e) { __navigating = true; console.log('X'); });
+
 __wsock.onopen = function() { log('INF', 'CONNECTED to: ' + window.location.host); updateWsStatus(true); };
 __wsock.onerror = function(evt) { log('ERR', evt.data); };
 __wsock.onmessage = function (evt) { var data = JSON.parse(evt.data); decodeMessage(data); };
-
-
 __wsock.onclose = function() {
-  if ($('#taskFinished').hasClass('in') ||
-    $('#confirmStop').hasClass('in') || $('#confirmRun').hasClass('in') || $('#confirmRun').hasClass('in')) {
-    return;
-  }
+  if (__navigating == true) {return;}
   updateWsStatus(false); log('ERR', 'Connection lost'); $('#informConnLost').modal();
 };
 
