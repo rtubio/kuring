@@ -9,9 +9,7 @@
 {% endblock %}
 
 {% block content %}
-
   {% if object_list %}
-    <div class="container">
     {% for object in object_list %}
       <div class="row text-center p-3 mb-2 bg-secondary text-white">
         <div class="col-7"><a class=" text-white" href="{% url 'detailTask' object.pk %}">{{ object.name }}</a></div>
@@ -19,9 +17,9 @@
         <div class="col-1 font-weight-normal">{{ object.status|status }}</div>
       </div>
     {% endfor %}
-    </div>
   {% else %}
     <span class="text-center">(no tasks)</span>
   {% endif %}
 
 {% endblock %}
+</div>
