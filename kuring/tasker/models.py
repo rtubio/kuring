@@ -1,6 +1,7 @@
 import json
 import logging
 
+from celery.contrib.abortable import AbortableAsyncResult
 from channels.db import database_sync_to_async
 from datetime import datetime
 from django.db import models
@@ -8,20 +9,10 @@ from django.urls import reverse
 from django.dispatch import receiver
 from django.core.serializers.json import DjangoJSONEncoder
 
-from tasker import signals, tasks
+from kuring import celery as kuringCelery
+from tasker import tasks
 
 _l = logging.getLogger(__name__)
-
-
-@receiver(signals.taskFinished)
-def taskFinished(sender, taskId=None, results=None, **kwargs):
-    _l.info(f"Task finished! Signal received from {sender}")
-    object = Task.objects.get(task_id=taskId)
-
-    object.status = Task.FINISHED
-    object.results = json.dumps(results, cls=DjangoJSONEncoder)
-
-    object.save()
 
 
 @database_sync_to_async
@@ -44,9 +35,11 @@ def taskStopped(taskId):
     _l.info(f"Task #{taskId} stopped!")
     object = Task.objects.get(pk=taskId)
 
-    if object.status == Task.RUNNING and not object.task_id:
+    if object.status == Task.RUNNING and object.task_id:
         object.status = Task.FINISHED
-        obj.task_id = None
+        abortable_task = AbortableAsyncResult(object.task_id)
+        abortable_task.abort()
+        object.task_id = None
         object.save()
 
     else:

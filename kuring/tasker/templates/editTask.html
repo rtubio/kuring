@@ -2,6 +2,7 @@
 {% load bootstrap4 %}
 
 {% block content %}
+<div class="container">
 
 <form method="post">
   {% csrf_token %}
@@ -11,4 +12,5 @@
   {% endbuttons %}
 </form>
 
+</div>
 {% endblock %}
