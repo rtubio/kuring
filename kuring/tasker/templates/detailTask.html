@@ -25,7 +25,9 @@
       <hr/>
       <div class="row">
         <div class="col">
-          <a id="db-trash" class="nav-link text-light" data-toggle="modal" data-target="#confirmDelete">{% icon 'trash' %}</a>
+          <a id="db-trash" class="nav-link text-light" data-toggle="modal" data-target="#confirmDelete" href="#">
+            {% icon 'trash' %}
+          </a>
         </div>
         <div class="col">
           <a id="db-edit" class="nav-link text-light" href="{% url 'updateTask' object.pk %}">{% icon 'edit' %}</a>
@@ -57,8 +59,12 @@
       <hr/>
 
       <div class="row">
-        <div class="col-6"><p>ws status: </p></div>
-        <div class="col-6"><p id="wsStatus"></p></div>
+        <div class="col-2"><p>ws: </p></div>
+        <div class="col-2"><p id="wsStatus"></p></div>
+        <div class="col-2"><p>d (us): </p></div>
+        <div class="col-2"><p id="wsDelay">N/A</p></div>
+        <div class="col-2"><p>j (us): </p></div>
+        <div class="col-2"><p id="wsJitter">N/A</p></div>
       </div>
 
       <div class="row"><div class="col"><div class="form-group mb-0">

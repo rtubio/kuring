@@ -24,6 +24,10 @@ var url = "ws://" + window.location.host + "/ws/tasker/" + task_id + '/';
 var KEEPALIVE = 50000;    // 50s keepalive
 var __wsock = new WebSocket(url);
 var __wsStatus = false;
+var __wsDelayN = 0;
+var __wsDelay = 0.0;
+var __wsDelayPrev = 0.0;
+var __wsJitter = 0.0;
 var __pingAlarm = window.setInterval(pingServer, KEEPALIVE);   // every 5 seconds, ping...;
 var __pingReset = 0;
 
@@ -52,6 +56,7 @@ function decodeMessage(message) {
     __plotData[data['m']]['x'].push(data['x']);
     __plotData[data['m']]['y'].push(data['y']);
     Plotly.redraw(__plotId);
+    reportDelay(data);
     return;
   }
   log('ERR', 'Non-decodable data = ' + JSON.stringify(data));
@@ -120,4 +125,19 @@ function log (level, message) {
 
 function updateWsStatus (status) {
   var text = 'OFF'; __wsStatus = status; if (__wsStatus) { text = 'ON'; } $('#wsStatus').html(text);
+}
+
+function timestamp () {return (1.0*(new Date().getTime()) / 1000);}
+function reportDelay (data) {
+  updateWsDelayStats(data);
+  sendMessage(__wsock, {'type': 'delay', 'delay': delay}, false).then(function (e) { log('INF', 'delay = ' + delay)});
+}
+function updateWsDelayStats(data) {
+  delay = timestamp() - data['t'];
+  __wsDelayN += 1;
+  __wsDelay = __wsDelay + (delay - __wsDelay) / __wsDelayN;
+  jitter = Math.abs(__wsDelayPrev - delay);
+  __wsJitter = __wsJitter + (jitter - __wsJitter) / __wsDelayN;
+  __wsDelayPrev = delay;
+  $("#wsDelay").html(parseInt(__wsDelay*1000,10)); $("#wsJitter").html(parseInt(__wsJitter*1000, 10));
 }

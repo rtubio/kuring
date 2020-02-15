@@ -8,11 +8,11 @@ import time
 from celery import current_app, shared_task
 from celery.utils.log import get_task_logger
 
-from common import influxdb
+from common import influxdb, time as _time
 from tasker import signals
 
 
-COUNTER_MAX = 5
+COUNTER_MAX = 5000
 _l = get_task_logger(__name__)
 layer = channels.layers.get_channel_layer()
 
@@ -38,8 +38,8 @@ def collectData(self, counter=COUNTER_MAX):
         randA = random.randint(-10, 120)
         randB = random.randint(-10, 120)
 
-        messageA = { 'type': 'plot.data', 'm': 'T1', 'x': x, 'y': randA }
-        messageB = { 'type': 'plot.data', 'm': 'T2', 'x': x, 'y': randB }
+        messageA = { 'type': 'plot.data', 'm': 'T1', 'x': x, 'y': randA, 't': _time.timestamp() }
+        messageB = { 'type': 'plot.data', 'm': 'T2', 'x': x, 'y': randB, 't': _time.timestamp() }
 
         influxdbWrite.delay(task_id, messageA)
         influxdbWrite.delay(task_id, messageB)
@@ -51,7 +51,7 @@ def collectData(self, counter=COUNTER_MAX):
 
     _l.info(f'Ending task (id = {task_id})')
 
-    timestamp = datetime.datetime.now().timestamp()
+    timestamp = _time.timestamp()
     signals.taskFinished.send(sender='celeryTask', taskId=task_id, results={'timestamp': timestamp})
     message = { 'type': 'task.finished', 'task_id': task_id, 'timestamp': timestamp }
     async_to_sync(layer.group_send)('kuring', message)
