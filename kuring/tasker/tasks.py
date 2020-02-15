@@ -24,6 +24,13 @@ def influxdbWrite(taskId, message):
     ovendb.writePoint(message['m'], message['x'], message['y'])
 
 
+@shared_task
+def saveDelay(taskId, timestamp, delay, jitter):
+    _l.info(f"Writing to influxdb: task#{taskId} > delay (us): {delay} jitter (us): {jitter}")
+    ovendb = influxdb.CuringOven.retrieve(taskId)
+    ovendb.saveDelay(taskId, timestamp, delay, jitter)
+
+
 @shared_task(bind=True)
 def collectData(self, counter=COUNTER_MAX):
     task_id = self.request.id

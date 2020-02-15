@@ -79,7 +79,9 @@ class CuringOven(object):
             'T2': {'sensor': 'chamber', 'variable': 'temperature', 'units': 'degC'},
             'P1': {'sensor': 'bag', 'variable': 'pressure', 'units': 'psi'},
             'P2': {'sensor': 'chamber', 'variable': 'pressure', 'units': 'psi'},
-            'O1': {'sensor': 'frame', 'variable': 'open', 'units': 'yes/no'}
+            'O1': {'sensor': 'frame', 'variable': 'open', 'units': 'yes/no'},
+            'JD': {'sensor': 'dj-js', 'variable': 'delay', 'units': 'us'},
+            'JJ': {'sensor': 'dj-js', 'variable': 'jitter', 'units': 'us'},
         }
 
     def getMeasurement(self, sensorId, since=None, until=None):
@@ -104,3 +106,7 @@ class CuringOven(object):
         }
         _l.info(f"point = {point}")
         self._client.write_points([point])
+
+
+    def saveDelay(self, taskId, timestamp, delay, jitter):
+        pass

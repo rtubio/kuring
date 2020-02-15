@@ -27,6 +27,7 @@ var __wsStatus = false;
 var __wsDelayN = 0;
 var __wsDelay = 0.0;
 var __wsDelayPrev = 0.0;
+var __wsDelayT = 0.0;
 var __wsJitter = 0.0;
 var __pingAlarm = window.setInterval(pingServer, KEEPALIVE);   // every 5 seconds, ping...;
 var __pingReset = 0;
@@ -36,8 +37,9 @@ __wsock.onopen = function() { log('INF', 'CONNECTED to: ' + window.location.host
 __wsock.onerror = function(evt) { log('ERR', evt.data); };
 __wsock.onmessage = function (evt) { var data = JSON.parse(evt.data); decodeMessage(data); };
 __wsock.onclose = function() {
-  if (__navigating == true) {return;}
-  updateWsStatus(false); log('ERR', 'Connection lost'); $('#informConnLost').modal();
+  if (__navigating == true) { return; }
+  updateWsStatus(false);
+  log('ERR', 'Connection lost'); $('#informConnLost').modal();
 };
 
 
@@ -127,17 +129,30 @@ function updateWsStatus (status) {
   var text = 'OFF'; __wsStatus = status; if (__wsStatus) { text = 'ON'; } $('#wsStatus').html(text);
 }
 
+
 function timestamp () {return (1.0*(new Date().getTime()) / 1000);}
+
+
 function reportDelay (data) {
   updateWsDelayStats(data);
-  sendMessage(__wsock, {'type': 'delay', 'delay': delay}, false).then(function (e) { log('INF', 'delay = ' + delay)});
+  var report = {'type': 'reportDelay', 'taskId': task_id, 't': __wsDelayT, 'd': __wsDelayPrev, 'j': __wsJitterPrev};
+  sendMessage(__wsock, report, false).then(function (e) { });
 }
+
+
 function updateWsDelayStats(data) {
-  delay = timestamp() - data['t'];
+
+  __wsDelayT = timestamp()
+  var delay = __wsDelayT - data['t'];
+  var jitter = Math.abs(__wsDelayPrev - delay);
+
   __wsDelayN += 1;
   __wsDelay = __wsDelay + (delay - __wsDelay) / __wsDelayN;
-  jitter = Math.abs(__wsDelayPrev - delay);
   __wsJitter = __wsJitter + (jitter - __wsJitter) / __wsDelayN;
   __wsDelayPrev = delay;
-  $("#wsDelay").html(parseInt(__wsDelay*1000,10)); $("#wsJitter").html(parseInt(__wsJitter*1000, 10));
+  __wsJitterPrev = jitter;
+
+  $("#wsDelay").html(parseInt(__wsDelay*1000, 10));
+  $("#wsJitter").html(parseInt(__wsJitter*1000, 10));
+
 }

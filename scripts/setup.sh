@@ -159,6 +159,20 @@ install_env_packages () {
 }
 
 
+install_django () {
+  source "$VENV_ACTIVATE"
+  # 4.1) create secret key
+  key="$( python $django_skg )"
+  create_django_secret "$SECRETS_DJANGO" "$key"
+  # 4.2) migrate the database and create superuser (DEVELOPMENT)
+  cd "$DJANGO_APP_DIR"
+  python manage.py makemigrations && python manage.py migrate
+  python manage.py createsuperuser
+  python manage.py collectstatic --no-input
+  cd ..
+}
+
+
 source 'config/scripts.config'
 
 echo "[info, $0] Starting execution (DEV ENVIRONMENT SETUP), pwd = $(pwd)"
@@ -170,28 +184,20 @@ mkdir -p "$STATIC_DIR"
 # TODO # Remove if unnecessary: # mkdir -p "$CELERY_LOGS"
 
 # 1) Install Debian packages for DEVELOPMENT
-# add_extra_repositories
-# install_sys_packages
-# post_sys_install
+add_extra_repositories
+install_sys_packages
+post_sys_install
 
-# 2) Setup virtual environment for DEVELOPMENT
-# install_env_packages
+# 2) Setup Python and Javascript environments
+install_env_packages
+npm install
 
-# 3) Setup influxDB and REDIS
+# 3) Setup Django
+install_django
+
+# 4) Setup influxDB and REDIS
 install_influxdb
 install_redis
-exit -1
 
-# 4) Configure Django
-source "$VENV_ACTIVATE"
-# 4.1) create secret key
-key="$( python $django_skg )"
-create_django_secret "$SECRETS_DJANGO" "$key"
-# 4.2) migrate the database and create superuser (DEVELOPMENT)
-cd "$DJANGO_APP_DIR"
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py collectstatic --no-input
-cd ..
-
+# 5) Restore environment and leave
 deactivate

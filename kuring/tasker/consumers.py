@@ -4,7 +4,7 @@ from channels.generic import websocket
 import json
 import logging
 
-from tasker import models
+from tasker import models, tasks
 
 _l = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard('kuring', self.channel_name)
 
     async def receive(self, text_data):
-        _l.debug(f'> text_data = {text_data}')
+        # _l.info(f'> text_data = {text_data}')
         message = json.loads(text_data)['message']
         type = message['type']
 
@@ -32,6 +32,10 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
         if type == 'stopTask':
             # await self.channel_layer.group_send('kuring', message)
             await models.taskStopped(message['taskId'])
+            return
+        if type == 'reportDelay':
+            # await self.channel_layer.group_send('kuring', message)
+            tasks.saveDelay.delay(message['taskId'], message['t'], message['d'], message['j'])
             return
 
     async def sendMessage(self, message):
