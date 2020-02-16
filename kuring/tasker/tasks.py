@@ -26,9 +26,54 @@ def influxdbWrite(taskId, message):
 
 @shared_task
 def saveDelay(taskId, timestamp, delay, jitter):
-    _l.info(f"Writing to influxdb: task#{taskId} > delay (us): {delay} jitter (us): {jitter}")
+    _l.debug(f"Writing to influxdb: task#{taskId} > delay (us): {delay} jitter (us): {jitter}")
+    _l.debug(f'timestamp = {timestamp}, type(timestamp) = {type(timestamp)}')
     ovendb = influxdb.CuringOven.retrieve(taskId)
-    ovendb.saveDelay(taskId, timestamp, delay, jitter)
+    ovendb.saveDelay(timestamp, delay, jitter)
+
+
+@shared_task(bind=True, base=AbortableTask)
+def sendPlot(self, taskid, sensorId, chunkSize=1024):
+    """
+    This function reads all the data for the plot from the database and returns it through a websocket in chunks of
+    size 'chunkSize=1024'
+
+    taskid -- identifier of the task
+    sensorId -- identifier of the sensor whose data has been requested
+    chunkSize=1024 -- maximum number of points to be sent to the user interface through websocket
+    """
+    task_id = self.request.id
+    async_to_sync(layer.group_add)('kuring', f'task_{task_id}')
+
+    _l.info(f"Start sending plot data for task#{taskid}")
+    ovendb = influxdb.CuringOven.retrieve(taskid)
+    measurement = ovendb.getMeasurement(sensorId)
+    _l.debug(f"len(measurement) = {len(measurement)}")
+
+    points = len(measurement)
+    sent = 0
+    processed = 0
+    messageSize = chunkSize     # default, to be adjusted for the last iteration
+    message = {'type': 'replay.data', 'm': sensorId, 'ts': [], 'vs': []}
+
+    while (sent < points):
+        left = points - sent
+        if left < chunkSize:
+            messageSize = left
+
+        while (processed < messageSize):
+            message['ts'].append(measurement[processed]['time'])
+            message['vs'].append(measurement[processed]['value'])
+            processed += 1
+
+        async_to_sync(layer.group_send)('kuring', message)
+        _l.info(f"Sent {messageSize} points, [{sent, sent+messageSize}]")
+
+        sent += chunkSize
+
+    async_to_sync(layer.group_send)('kuring', message)
+    async_to_sync(layer.group_discard)('kuring', 'tasker')
+    influxdb.CuringOven.cleanup(task_id)
 
 
 @shared_task(bind=True, base=AbortableTask)
@@ -40,7 +85,6 @@ def collectData(self, counter=COUNTER_MAX):
 
     while counter > 0 and not self.is_aborted():
         time.sleep(1)
-        _l.warning(f" @@@@ aborted? = {self.is_aborted()}")
 
         x = COUNTER_MAX - counter
         randA = random.randint(-10, 120)

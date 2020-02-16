@@ -16,11 +16,17 @@ _l = logging.getLogger(__name__)
 
 
 @database_sync_to_async
+def requestPlot(taskpk, sensorId):
+    task_id = Task.objects.get(pk=taskpk).task_id
+    tasks.sendPlot.delay(task_id, sensorId)
+
+
+@database_sync_to_async
 def taskLaunched(taskId):
     _l.info(f"Task #{taskId} launched!")
     object = Task.objects.get(pk=taskId)
 
-    if object.status == Task.NEW and not object.task_id:
+    if object.status == Task.NEW:
         object.status = Task.RUNNING
         task_obj = tasks.collectData.delay()
         object.task_id = task_obj.id
@@ -35,11 +41,10 @@ def taskStopped(taskId):
     _l.info(f"Task #{taskId} stopped!")
     object = Task.objects.get(pk=taskId)
 
-    if object.status == Task.RUNNING and object.task_id:
+    if object.status == Task.RUNNING:
         object.status = Task.FINISHED
         abortable_task = AbortableAsyncResult(object.task_id)
         abortable_task.abort()
-        object.task_id = None
         object.save()
 
     else:

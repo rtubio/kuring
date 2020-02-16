@@ -19,7 +19,7 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard('kuring', self.channel_name)
 
     async def receive(self, text_data):
-        # _l.info(f'> text_data = {text_data}')
+        _l.info(f'> text_data = {text_data}')
         message = json.loads(text_data)['message']
         type = message['type']
 
@@ -30,18 +30,22 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
             await models.taskLaunched(message['taskId'])
             return
         if type == 'stopTask':
-            # await self.channel_layer.group_send('kuring', message)
             await models.taskStopped(message['taskId'])
             return
         if type == 'reportDelay':
-            # await self.channel_layer.group_send('kuring', message)
             tasks.saveDelay.delay(message['taskId'], message['t'], message['d'], message['j'])
+            return
+        if type == 'requestPlot':
+            await models.requestPlot(message['taskpk'], message['sensorId'])
             return
 
     async def sendMessage(self, message):
         await self.send(text_data=json.dumps({'message': message}))
 
     async def plot_data(self, event):
+        await self.sendMessage(event)
+
+    async def replay_data(self, event):
         await self.sendMessage(event)
 
     async def task_finished(self, event):

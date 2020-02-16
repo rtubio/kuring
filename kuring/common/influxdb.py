@@ -36,23 +36,22 @@ class CuringOven(object):
     @staticmethod
     def retrieve(taskId):
         if taskId in CuringOven._clients:
-            _l.debug(f"Retrieving client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
+            _l.info(f"[GOT] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
             return CuringOven._clients[taskId]
 
         oven = CuringOven(taskId)
         CuringOven._clients[taskId] = oven
-        _l.info(f"Added client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
+        _l.info(f"[ADDED] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
         return oven
 
 
     @staticmethod
     def cleanup(taskId):
-        _l.info(f"Removing client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
         try:
             oven = CuringOven._clients.pop(taskId)
             oven.close()
             oven = None
-            _l.info(f"Removed client for task #{taskId}")
+            _l.info(f"[REMOVED] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
         except KeyError as ex:
             _l.warn(f"Exception = {ex}")
             _l.warn(f"No client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}, skipping...")
@@ -68,6 +67,8 @@ class CuringOven(object):
         self.fields = ['value']
         self.tags = ['device', 'sensor', 'variable']
 
+        print(f"settings: {settings.INFLUXDB_DBNAME}")
+
         self._client = InfluxDBClient(
             username=settings.INFLUXDB_USRNAME,
             password=settings.INFLUXDB_USRPWD,
@@ -81,22 +82,34 @@ class CuringOven(object):
             'P2': {'sensor': 'chamber', 'variable': 'pressure', 'units': 'psi'},
             'O1': {'sensor': 'frame', 'variable': 'open', 'units': 'yes/no'},
             'JD': {'sensor': 'dj-js', 'variable': 'delay', 'units': 'us'},
-            'JJ': {'sensor': 'dj-js', 'variable': 'jitter', 'units': 'us'},
+            'JJ': {'sensor': 'dj-js', 'variable': 'jitter', 'units': 'us'}
         }
 
-    def getMeasurement(self, sensorId, since=None, until=None):
+        self.tags_2_sensorId = {
+            'plate': {'temperature': 'T1'},
+            'chamber': {'temperature': 'T2', 'pressure': 'P2'},
+            'bag': {'pressure': 'P1'},
+            'frame': {'open': 'O1'},
+            'dj-ds': {'delay': 'JD'},
+            'dj-js': {'jitter': 'JJ'}
+        }
+
+
+    def getMeasurement(self, sensorId):
         """
         This function returns a full measurement series taken by a given sensor, in between two specific points in
         time.
 
         sensorId -- predefined sensor identifier
-        since=None -- (optional) timestamp describing the point after which the sensor data is required.
-        until=None -- (optional) timestamp describing the point until which the sensor data is required.
         """
         tags = self.id_2_tags[sensorId]
+        query = self._client.query(f"select * from \"{self.measurement}\"")
+        all = list(query.get_points())
+        return list(query.get_points(tags=tags))
 
 
-    def writePoint(self, sensorId, timestamp, value):
+    def writePoint(self, sensorId, timestamp, value, time_precision='ms'):
+        _l.debug(f'timestamp = {timestamp}, type(timestamp) = {type(timestamp)}')
         tags = self.id_2_tags[sensorId]
         point = {
             "measurement": self.measurement,
@@ -104,9 +117,9 @@ class CuringOven(object):
             "tags": {**tags, "device": self.device},
             "fields": {"value": value}
         }
-        _l.info(f"point = {point}")
-        self._client.write_points([point])
+        self._client.write_points([point], time_precision=time_precision)
 
 
-    def saveDelay(self, taskId, timestamp, delay, jitter):
-        pass
+    def saveDelay(self, timestamp, delay, jitter):
+        self.writePoint('JD', timestamp, delay*1000)
+        self.writePoint('JJ', timestamp, jitter*1000)
