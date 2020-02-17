@@ -49,6 +49,7 @@ class CuringOven(object):
     def cleanup(taskId):
         try:
             oven = CuringOven._clients.pop(taskId)
+            _l.debug(f'[CLEANUP] oven = {oven}')
             oven.close()
             oven = None
             _l.info(f"[REMOVED] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
@@ -95,6 +96,10 @@ class CuringOven(object):
         }
 
 
+    def close(self):
+        self._client.close()
+
+
     def getMeasurement(self, sensorId):
         """
         This function returns a full measurement series taken by a given sensor, in between two specific points in
@@ -109,7 +114,7 @@ class CuringOven(object):
 
 
     def writePoint(self, sensorId, timestamp, value, time_precision='ms'):
-        _l.debug(f'timestamp = {timestamp}, type(timestamp) = {type(timestamp)}')
+        _l.debug(f'[INFLUXDB, writePoint] :: timestamp = {timestamp}, type(timestamp) = {type(timestamp)}')
         tags = self.id_2_tags[sensorId]
         point = {
             "measurement": self.measurement,

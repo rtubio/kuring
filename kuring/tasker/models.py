@@ -18,17 +18,17 @@ _l = logging.getLogger(__name__)
 @database_sync_to_async
 def requestPlot(taskpk, sensorId):
     task_id = Task.objects.get(pk=taskpk).task_id
-    tasks.sendPlot.delay(task_id, sensorId)
+    tasks.sendPlot.delay(taskpk, task_id, sensorId)
 
 
 @database_sync_to_async
-def taskLaunched(taskId):
-    _l.info(f"Task #{taskId} launched!")
-    object = Task.objects.get(pk=taskId)
+def taskLaunched(taskpk):
+    _l.info(f"Task #{taskpk} launched!")
+    object = Task.objects.get(pk=taskpk)
 
     if object.status == Task.NEW:
         object.status = Task.RUNNING
-        task_obj = tasks.collectData.delay()
+        task_obj = tasks.collectData.delay(taskpk)
         object.task_id = task_obj.id
         object.save()
 

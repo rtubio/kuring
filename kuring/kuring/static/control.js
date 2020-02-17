@@ -3,8 +3,8 @@ var task_status = $("#taskStatus").html();
 var datefmt = { hour: "2-digit", minute: "2-digit", second: "2-digit" };
 var __plotId = 'graph1';
 var __plotData = {
-  'T1': {x: [], y: [], mode: 'lines', line: { width: 3}, name: 'temp_1'},
-  'T2': {x: [], y: [], mode: 'lines', line: { width: 3}, name: 'temp_2'},
+  'T1': {x: [], y: [], mode: 'lines', line: { width: 3}, name: 'temp_1', replay: false},
+  'T2': {x: [], y: [], mode: 'lines', line: { width: 3}, name: 'temp_2', replay: false},
 };
 var __navigating = false;   // flag that blocks the connection lost window from being launched during navigation
 var layout = {
@@ -12,11 +12,10 @@ var layout = {
   showlegend: true,
   plot_bgcolor: "rgba(248, 249, 250, 0)",
   paper_bgcolor: "rgba(248, 249, 250, 0)",
-  xaxis: { title: { text: 'time (s)' }, range: [0, 600], autorange: true },
+  xaxis: { title: { text: 'time (s)' }, range: [0, 6000], autorange: true },
   yaxis: { title: { text: 'Temperature (degC)' }, range: [-10, 150], autorange: false }
 };
 var __plot = Plotly.newPlot(__plotId, [__plotData['T1'], __plotData['T2']], layout);
-var __latestPlot = 0.0;     // point in time for the latest plotted data.
 
 // websocket configuration
 var task_id = $("#taskId").html();
@@ -58,31 +57,57 @@ async function sendMessage(ws, message, count) {
 function decodeMessage(message) {
   __pingReset += 1;
   data = message['message'];
+
   if (data['type'] == 'pong') { log('INF', 'Pong!'); return; }
   if (data['type'] == 'info') { log('INF', str(data['message'])); return; }
   if (data['type'] == 'task.finished') { log('INF', 'Task finished!'); $('#taskFinished').modal(); return; }
-  if (data['type'] == 'plot.data') {
-    __latestPlot = data['x'];
-    __plotData[data['m']]['x'].push(data['x']);
-    __plotData[data['m']]['y'].push(data['y']);
-    Plotly.redraw(__plotId);
-    reportDelay(data);
-    return;
-  }
-  if (data['type'] == 'replay.data') {
-    console.log('*, data = ' + JSON.stringify(data));
-    plotChunks(data['m'], data['ts'], data['vs']);
-    return;
-  }
+  if (data['type'] == 'replay.data') { if (data['taskpk'] != task_id) { return; } plotChunks(data); return; }
+  if (data['type'] == 'plot.data')   { if (data['taskpk'] != task_id) { return; } plotPoint(data);  return; }
+
   log('ERR', 'Non-decodable data = ' + JSON.stringify(data));
+
 }
 
 
-function plotChunks(sensorId, times, values) {
-  __plotData[sensorId]['x'].push(times);
-  __plotData[sensorId]['y'].push(values);
-  __latestPlot = times[times.length - 1];
+function triggerReplay(data) {
+  var sensorId = data['m'];
+  if (__plotData[sensorId].replay == false) {return;}
+  __plotData[sensorId].replay = false; // deactivate the mechanism, only one petition per client
+
+  var until = __plotData[sensorId]['x'][0];
+  sendPlotRequest (sensorId, 0, until); // IMPORTANT: one sensor requests the data for all
+
+  log('INF', '[REPLAY, triggered] sensor = ' + sensorId + ', until ' + until);
+}
+
+
+function plotPoint(data) {
+  __plotData[data['m']]['x'].push(data['x']);
+  __plotData[data['m']]['y'].push(data['y']);
   Plotly.redraw(__plotId);
+  reportDelay(data);
+  triggerReplay(data);
+}
+
+
+function plotChunks(data) {
+  var sensorId = data['m']; var times = data['ts']; var values = data['vs']; var until = times[times.length-1];
+
+  __plotData[sensorId]['x'] = __plotData[sensorId]['x'].concat(times);
+  __plotData[sensorId]['y'] = __plotData[sensorId]['y'].concat(values);
+
+  Plotly.redraw(__plotId);
+}
+
+
+function findInsertionPoint(sensor, time) {
+  var array = __plotData[sensor]['x']; var index = -1;
+  if (array.length == 0) {return 0;}
+
+  for (var i = 0; i < array.length; i++) { if (array[i] > ref) { index = i; break; } }
+
+  if (index < 0) { return array.length - 1; }
+  return index;
 }
 
 
@@ -105,6 +130,8 @@ function stopOk__click(e) {
   sendMessage(__wsock, {'type': 'stopTask', 'taskId': task_id});
   setControlsFinished(); log('Task stopped');
 }
+
+
 function endOk__click(e) { $("#taskFinished").modal('toggle'); setControlsFinished(); log('INF', 'Task finished!'); }
 
 
@@ -125,16 +152,24 @@ $(document).ready(function(){
 
 function loadPlot () {
   // This function loads the data from the previous execution run if necessary.
-  if ((task_status == "N") || (task_status == "R" )) { return; }
-  sendPlotRequest();
+  if (task_status == "N") { return; }
+  if (task_status == "R") {
+    // for (const [sensor, plot] of Object.entries(__plotData)) { __plotData[sensor].replay = true; }
+    requestPlotData(0, -1);
+    return;
+  }
+  requestPlotData(0, -1);
 }
 
 
-function sendPlotRequest () {
-  var msg = {'type': 'requestPlot', 'taskpk': task_id, 'sensorId': 'T1'};
-  sendMessage(__wsock, msg, true).then(log('INF', 'T1 Plot requested, task #' + task_id));
-  var msg = {'type': 'requestPlot', 'taskpk': task_id, 'sensorId': 'T2'};
-  sendMessage(__wsock, msg, true).then(log('INF', 'T2 Plot requested, task #' + task_id));
+function sendPlotRequest (sensorId, from, to) {
+  var msg = {'type': 'requestPlot', 'taskpk': task_id, 'sensorId': sensorId, 'from': from, 'to': to};
+  sendMessage(__wsock, msg, true).then(log('INF', '[REPLAY] Sensor = ' + sensorId + ', task #' + task_id));
+}
+
+
+function requestPlotData (from, to) {
+  for (const [sensor, plot] of Object.entries(__plotData)) { sendPlotRequest(sensor, from, to); }
 }
 
 
