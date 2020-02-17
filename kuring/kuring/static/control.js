@@ -7,6 +7,7 @@ var __plotData = {
   'T2': {x: [], y: [], mode: 'lines', line: { width: 3}, name: 'temp_2', replay: false},
 };
 var __navigating = false;   // flag that blocks the connection lost window from being launched during navigation
+var config = { responsive: true };
 var layout = {
   title: 'Curing Oven - Temperature Measurements',
   showlegend: true,
@@ -15,7 +16,7 @@ var layout = {
   xaxis: { title: { text: 'time (s)' }, range: [0, 6000], autorange: true },
   yaxis: { title: { text: 'Temperature (degC)' }, range: [-10, 150], autorange: false }
 };
-var __plot = Plotly.newPlot(__plotId, [__plotData['T1'], __plotData['T2']], layout);
+var __plot = Plotly.newPlot(__plotId, [__plotData['T1'], __plotData['T2']], layout, config);
 
 // websocket configuration
 var task_id = $("#taskId").html();
