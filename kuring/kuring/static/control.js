@@ -19,8 +19,8 @@ var layout = {
 var __plot = Plotly.newPlot(__plotId, [__plotData['T1'], __plotData['T2']], layout, config);
 
 // websocket configuration
-var task_id = $("#taskId").html();
-var url = "ws://" + window.location.host + "/ws/tasker/" + task_id + '/';
+var taskpk = $("#taskpk").html();
+var url = "ws://" + window.location.host + "/ws/tasker/" + taskpk + '/';
 
 var KEEPALIVE = 50000;    // 50s keepalive
 var __wsock = new WebSocket(url);
@@ -40,8 +40,10 @@ __wsock.onopen = function() {
   loadPlot();
 };
 
+
 __wsock.onerror = function(evt) { log('ERR', evt.data); };
 __wsock.onmessage = function (evt) { var data = JSON.parse(evt.data); decodeMessage(data); };
+
 
 __wsock.onclose = function() {
   if (__navigating == true) { return; }
@@ -51,19 +53,23 @@ __wsock.onclose = function() {
 
 
 async function sendMessage(ws, message, count) {
-  if (count) { __pingReset += 1; } return ws.send(JSON.stringify({'message': message}));
+  message['taskpk'] = taskpk;                              // sendMessage always adds the reference to task pk
+  if (count) { __pingReset += 1; }
+  return ws.send(JSON.stringify({'message': message}));    // ASYNC
 }
 
 
 function decodeMessage(message) {
   __pingReset += 1;
   data = message['message'];
+  // decodeMessage discards all the messages for other tasks than this one
+  if (data['taskpk'] != taskpk) { console.log("Drop message for task = " + data['taskpk']); return; }
 
   if (data['type'] == 'pong') { log('INF', 'Pong!'); return; }
   if (data['type'] == 'info') { log('INF', str(data['message'])); return; }
   if (data['type'] == 'task.finished') { log('INF', 'Task finished!'); $('#taskFinished').modal(); return; }
-  if (data['type'] == 'replay.data') { if (data['taskpk'] != task_id) { return; } plotChunks(data); return; }
-  if (data['type'] == 'plot.data')   { if (data['taskpk'] != task_id) { return; } plotPoint(data);  return; }
+  if (data['type'] == 'replay.data') { plotChunks(data); return; }
+  if (data['type'] == 'plot.data')   { plotPoint(data);  return; }
 
   log('ERR', 'Non-decodable data = ' + JSON.stringify(data));
 
@@ -71,14 +77,14 @@ function decodeMessage(message) {
 
 
 function triggerReplay(data) {
-  var sensorId = data['m'];
-  if (__plotData[sensorId].replay == false) {return;}
-  __plotData[sensorId].replay = false; // deactivate the mechanism, only one petition per client
+  var sensor = data['m'];
+  if (__plotData[sensor].replay == false) {return;}
+  __plotData[sensor].replay = false; // deactivate the mechanism, only one petition per client
 
-  var until = __plotData[sensorId]['x'][0];
-  sendPlotRequest (sensorId, 0, until); // IMPORTANT: one sensor requests the data for all
+  var until = __plotData[sensor]['x'][0];
+  sendPlotRequest (sensor, 0, until); // IMPORTANT: one sensor requests the data for all
 
-  log('INF', '[REPLAY, triggered] sensor = ' + sensorId + ', until ' + until);
+  log('INF', '[REPLAY, triggered] sensor = ' + sensor + ', until ' + until);
 }
 
 
@@ -92,10 +98,10 @@ function plotPoint(data) {
 
 
 function plotChunks(data) {
-  var sensorId = data['m']; var times = data['ts']; var values = data['vs']; var until = times[times.length-1];
+  var sensor = data['m']; var times = data['ts']; var values = data['vs']; var until = times[times.length-1];
 
-  __plotData[sensorId]['x'] = __plotData[sensorId]['x'].concat(times);
-  __plotData[sensorId]['y'] = __plotData[sensorId]['y'].concat(values);
+  __plotData[sensor]['x'] = __plotData[sensor]['x'].concat(times);
+  __plotData[sensor]['y'] = __plotData[sensor]['y'].concat(values);
 
   Plotly.redraw(__plotId);
 }
@@ -121,24 +127,28 @@ function pingServer() {
 
 function runOk__click(e) {
   $("#confirmRun").modal('toggle');
-  sendMessage(__wsock, {'type': 'runTask', 'taskId': task_id});
+  sendMessage(__wsock, {'type': 'runTask'});
   setControlsRunning(); log('INF', 'Task launched');
 }
 
 
 function stopOk__click(e) {
   $("#confirmStop").modal('toggle');
-  sendMessage(__wsock, {'type': 'stopTask', 'taskId': task_id});
+  sendMessage(__wsock, {'type': 'stopTask'});
   setControlsFinished(); log('Task stopped');
 }
 
 
-function endOk__click(e) { $("#taskFinished").modal('toggle'); setControlsFinished(); log('INF', 'Task finished!'); }
+function endOk__click(e) {
+  $("#taskFinished").modal('toggle');
+  setControlsFinished();
+  log('INF', 'Task finished!');
+}
 
 
 $(document).ready(function(){
 
-  log('INF', "Loading task #" + task_id + ", state = " + task_status);
+  log('INF', "Loading task #" + taskpk + ", state = " + task_status);
 
   $("#runOk").click(runOk__click);
   $("#stopOk").click(stopOk__click);
@@ -163,9 +173,9 @@ function loadPlot () {
 }
 
 
-function sendPlotRequest (sensorId, from, to) {
-  var msg = {'type': 'requestPlot', 'taskpk': task_id, 'sensorId': sensorId, 'from': from, 'to': to};
-  sendMessage(__wsock, msg, true).then(log('INF', '[REPLAY] Sensor = ' + sensorId + ', task #' + task_id));
+function sendPlotRequest (sensor, from, to) {
+  var msg = {'type': 'requestPlot', 'sensor': sensor, 'from': from, 'to': to};
+  sendMessage(__wsock, msg, true).then(log('INF', '[REPLAY] Sensor = ' + sensor + ', task #' + taskpk));
 }
 
 
@@ -216,7 +226,7 @@ function timestamp () {return new Date().getTime();}
 function reportDelay (data) {
   updateWsDelayStats(data);
   var report = {
-    'type': 'reportDelay', 'taskId': task_id,
+    'type': 'reportDelay',
     't': __wsDelayT,
     'd': __wsDelayPrev,
     'j': __wsJitterPrev

@@ -10,45 +10,50 @@ from django.dispatch import receiver
 from django.core.serializers.json import DjangoJSONEncoder
 
 from kuring import celery as kuringCelery
-from tasker import tasks
 
 _l = logging.getLogger(__name__)
 
 
 @database_sync_to_async
-def requestPlot(taskpk, sensorId):
-    task_id = Task.objects.get(pk=taskpk).task_id
-    tasks.sendPlot.delay(taskpk, task_id, sensorId)
-
-
-@database_sync_to_async
-def taskLaunched(taskpk):
+def taskLaunched(taskpk, taskid):
     _l.info(f"Task #{taskpk} launched!")
     object = Task.objects.get(pk=taskpk)
 
     if object.status == Task.NEW:
         object.status = Task.RUNNING
-        task_obj = tasks.collectData.delay(taskpk)
-        object.task_id = task_obj.id
+        object.task_id = taskid
         object.save()
 
     else:
-        _l.error('Trying to launch task #{taskId} but its satus is not ready')
+        _l.error(f'Trying to launch task #{taskid} but its satus is not ready')
 
 
 @database_sync_to_async
-def taskStopped(taskId):
-    _l.info(f"Task #{taskId} stopped!")
-    object = Task.objects.get(pk=taskId)
+def taskFinished(taskpk, abort=False):
+    """
+    This method permits stopping a task once it has finished. Stopping the task means two actions: (1) update the
+    state of the task in the Django ORM's managed databased; and (2) stop the celery task itself.
+    Since any task can be stopped because of two different reasons (A ~ user request on the UI, B ~ the celery task
+    finishes by itself), an abort flag is added to the method to indicate when the latter should also stop the celery
+    task or not. Usually, this flag is convenient for whenever the stop request for the task comes from the UI.
+
+    taskpk -- identifier of the task object within Django's ORM database
+    abort=False -- flag that indicates whether this method should also abort the celery task or not
+    """
+    _l.info(f"Task #{taskpk} stopped!")
+    object = Task.objects.get(pk=taskpk)
 
     if object.status == Task.RUNNING:
         object.status = Task.FINISHED
-        abortable_task = AbortableAsyncResult(object.task_id)
-        abortable_task.abort()
+
+        if abort:
+            abortable_task = AbortableAsyncResult(object.task_id)
+            abortable_task.abort()
+
         object.save()
 
     else:
-        _l.error('Trying to stop task #{taskId} but its satus is not ready')
+        _l.error(f'Trying to stop task for object #{taskpk} but its satus is not ready')
 
 
 class Task(models.Model):

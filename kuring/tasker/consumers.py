@@ -4,6 +4,7 @@ from channels.generic import websocket
 import json
 import logging
 
+from common import time as _time
 from tasker import models, tasks
 
 _l = logging.getLogger(__name__)
@@ -11,15 +12,43 @@ _l = logging.getLogger(__name__)
 
 class Tasker(websocket.AsyncJsonWebsocketConsumer):
 
+    _clients = {}
+
     async def connect(self):
-        await self.channel_layer.group_add('kuring', self.channel_name)
-        await self.accept()
+
+        try:
+
+            taskpk = self.scope['url_route']['kwargs']['taskpk']
+            if taskpk in self._clients:
+                _l.warning(f"<{taskpk}> client is already connected, multiple connections are not allowed")
+                return
+
+            self._clients[taskpk] = {'timestamp_connected': _time.timestamp()}
+            await self.channel_layer.group_add('kuring', self.channel_name)
+            await self.accept()
+            _l.info(f'Accepted connection for task <{taskpk}>')
+
+        except KeyError as ex:
+            _l.error(f"The call did not include the task key, cannot accept connection")
 
     async def disconnect(self, close_code):
+
+        try:
+
+            taskpk = self.scope['url_route']['kwargs']['taskpk']
+            if taskpk in self._clients:
+                del self._clients[taskpk]
+                _l.warning(f"<{taskpk}> client got disconnected")
+                return
+
+        except KeyError as ex:
+            _l.error(f"The call did not include the task key")
+            return
+
         await self.channel_layer.group_discard('kuring', self.channel_name)
 
     async def receive(self, text_data):
-        _l.info(f'> text_data = {text_data}')
+        _l.debug(f'> text_data = {text_data}')
         message = json.loads(text_data)['message']
         type = message['type']
 
@@ -27,19 +56,23 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
             await self.sendMessage({'type': 'pong'})
             return
         if type == 'runTask':
-            await models.taskLaunched(message['taskId'])
+            task_obj = tasks.collectData.delay(message['taskpk'])
+            await models.taskLaunched(message['taskpk'], task_obj.id)
             return
         if type == 'stopTask':
-            await models.taskStopped(message['taskId'])
+            await models.taskFinished(message['taskpk'], abort=True)
             return
         if type == 'reportDelay':
-            tasks.saveDelay.delay(message['taskId'], message['t'], message['d'], message['j'])
+            tasks.saveDelay.delay(message['taskpk'], message['t'], message['d'], message['j'])
             return
         if type == 'requestPlot':
-            await models.requestPlot(message['taskpk'], message['sensorId'])
+            tasks.sendPlot.delay(message['taskpk'], message['sensor'])
             return
 
     async def sendMessage(self, message):
+        if 'taskpk' not in message or message['taskpk'] not in self._clients:
+            _l.debug(f"<{message['taskpk']}> is not a registered client, dropping message <{message}>")
+            return
         await self.send(text_data=json.dumps({'message': message}))
 
     async def plot_data(self, event):
@@ -50,3 +83,4 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
 
     async def task_finished(self, event):
         await self.sendMessage(event)
+        await models.taskFinished(event['taskpk'])
