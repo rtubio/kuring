@@ -53,7 +53,7 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
         type = message['type']
 
         if type == 'ping':
-            await self.sendMessage({'type': 'pong'})
+            await self.sendMessage({'type': 'pong', 'taskpk': message['taskpk']})
             return
         if type == 'runTask':
             task_obj = tasks.collectData.delay(message['taskpk'])
@@ -70,7 +70,10 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
             return
 
     async def sendMessage(self, message):
-        if 'taskpk' not in message or message['taskpk'] not in self._clients:
+        if 'taskpk' not in message:
+            _l.debug(f"This message does not include <taskpk>, dropping <{message}>")
+            return
+        if message['taskpk'] not in self._clients:
             _l.debug(f"<{message['taskpk']}> is not a registered client, dropping message <{message}>")
             return
         await self.send(text_data=json.dumps({'message': message}))
