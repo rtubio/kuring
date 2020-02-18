@@ -36,12 +36,12 @@ class CuringOven(object):
     @staticmethod
     def retrieve(taskId):
         if taskId in CuringOven._clients:
-            _l.info(f"[GOT] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
+            _l.debug(f"[GOT] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
             return CuringOven._clients[taskId]
 
         oven = CuringOven(taskId)
         CuringOven._clients[taskId] = oven
-        _l.info(f"[ADDED] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
+        _l.debug(f"[ADDED] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
         return oven
 
 
@@ -52,7 +52,7 @@ class CuringOven(object):
             _l.debug(f'[CLEANUP] oven = {oven}')
             oven.close()
             oven = None
-            _l.info(f"[REMOVED] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
+            _l.debug(f"[REMOVED] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
         except KeyError as ex:
             _l.warn(f"Exception = {ex}")
             _l.warn(f"No client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}, skipping...")
@@ -68,7 +68,7 @@ class CuringOven(object):
         self.fields = ['value']
         self.tags = ['device', 'sensor', 'variable']
 
-        print(f"settings: {settings.INFLUXDB_DBNAME}")
+        _l.debug(f"settings: {settings.INFLUXDB_DBNAME}")
 
         self._client = InfluxDBClient(
             username=settings.INFLUXDB_USRNAME,

@@ -2,7 +2,7 @@
 from asgiref.sync import async_to_sync
 import channels.layers
 import datetime
-import random
+import math
 import time
 
 from celery import current_app, shared_task
@@ -90,11 +90,11 @@ def collectData(self, taskpk, counter=COUNTER_MAX):
         time.sleep(1)
 
         x = COUNTER_MAX - counter
-        randA = random.randint(-10, 120)
-        randB = random.randint(-10, 120)
+        yA = math.cos(x)
+        yB = math.sin(x)
 
-        messageA = { 'type': 'plot.data', 'taskpk': taskpk, 'm': 'T1', 'x': x, 'y': randA, 't': _time.timestamp() }
-        messageB = { 'type': 'plot.data', 'taskpk': taskpk, 'm': 'T2', 'x': x, 'y': randB, 't': _time.timestamp() }
+        messageA = { 'type': 'plot.data', 'taskpk': taskpk, 'm': 'T1', 'x': x, 'y': yA, 't': _time.timestamp() }
+        messageB = { 'type': 'plot.data', 'taskpk': taskpk, 'm': 'T2', 'x': x, 'y': yB, 't': _time.timestamp() }
 
         influxdbWrite.delay(taskpk, messageA)
         influxdbWrite.delay(taskpk, messageB)

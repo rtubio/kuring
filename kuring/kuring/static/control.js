@@ -14,7 +14,7 @@ var layout = {
   plot_bgcolor: "rgba(248, 249, 250, 0)",
   paper_bgcolor: "rgba(248, 249, 250, 0)",
   xaxis: { title: { text: 'time (s)' }, range: [0, 6000], autorange: true },
-  yaxis: { title: { text: 'Temperature (degC)' }, range: [-10, 150], autorange: false }
+  yaxis: { title: { text: 'Temperature (degC)' }, range: [-10, 150], autorange: true }
 };
 var __plot = Plotly.newPlot(__plotId, [__plotData['T1'], __plotData['T2']], layout, config);
 
@@ -89,8 +89,15 @@ function triggerReplay(data) {
 
 
 function plotPoint(data) {
-  __plotData[data['m']]['x'].push(data['x']);
-  __plotData[data['m']]['y'].push(data['y']);
+  var sensor = data['m'];
+  var tx = findInsertionPointBackwards(sensor, data['x']);
+
+  __plotData[sensor]['x'].splice(tx + 1, 0, data['x']);
+  __plotData[sensor]['y'].splice(tx + 1, 0, data['y']);
+
+  //console.log('>>> POINT@sensor:' + sensor + '.plotPoint(' + data['x'] + ',' + data['y'] + ')');
+  //console.log(__plotData[sensor]['x'], __plotData[sensor]['y']);
+
   Plotly.redraw(__plotId);
   reportDelay(data);
   triggerReplay(data);
@@ -98,10 +105,14 @@ function plotPoint(data) {
 
 
 function plotChunks(data) {
-  var sensor = data['m']; var times = data['ts']; var values = data['vs']; var until = times[times.length-1];
+  var sensor = data['m']; var times = data['ts']; var values = data['vs'];
+  var tx = findInsertionPointBackwards(sensor, times[0]);
 
-  __plotData[sensor]['x'] = __plotData[sensor]['x'].concat(times);
-  __plotData[sensor]['y'] = __plotData[sensor]['y'].concat(values);
+  __plotData[sensor]['x'].splice(tx, 0, ...times);
+  __plotData[sensor]['y'].splice(tx, 0, ...values);
+
+  //console.log('>>> CHUNK@sensor:' + sensor + '.plot([' + times[0] + ',' + times[times.length-1] + '],[' + values[0] + ',' + values[values.length-1] + ']');
+  //console.log(__plotData[sensor]['x'], __plotData[sensor]['y']);
 
   Plotly.redraw(__plotId);
 }
@@ -111,7 +122,18 @@ function findInsertionPoint(sensor, time) {
   var array = __plotData[sensor]['x']; var index = -1;
   if (array.length == 0) {return 0;}
 
-  for (var i = 0; i < array.length; i++) { if (array[i] > ref) { index = i; break; } }
+  for (var i = 0; i < array.length; i++) { if (array[i] > time) { index = i; break; } }
+
+  if (index < 0) { return array.length - 1; }
+  return index;
+}
+
+
+function findInsertionPointBackwards(sensor, time) {
+  var array = __plotData[sensor]['x']; var index = -1;
+  if (array.length == 0) {return 0;}
+
+  for (var i = (array.length - 1); i >= 0; i--) { if (array[i] < time) { index = i; break; } }
 
   if (index < 0) { return array.length - 1; }
   return index;
@@ -225,12 +247,7 @@ function timestamp () {return new Date().getTime();}
 
 function reportDelay (data) {
   updateWsDelayStats(data);
-  var report = {
-    'type': 'reportDelay',
-    't': __wsDelayT,
-    'd': __wsDelayPrev,
-    'j': __wsJitterPrev
-  };
+  var report = {'type': 'reportDelay', 't': __wsDelayT, 'd': __wsDelayPrev, 'j': __wsJitterPrev};
   sendMessage(__wsock, report, true).then(function (e) { });
 }
 
