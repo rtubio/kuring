@@ -192,12 +192,12 @@ post_sys_install
 install_env_packages
 npm install
 
-# 3) Setup Django
-install_django
-
-# 4) Setup influxDB and REDIS
+# 3) Setup influxDB and REDIS
 install_influxdb
 install_redis
+
+# 4) Setup Django
+install_django
 
 # 5) Restore environment and leave
 deactivate
