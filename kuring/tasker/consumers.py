@@ -81,6 +81,11 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
     async def plot_data(self, event):
         await self.sendMessage(event)
 
+    async def data_rx(self, event):
+        # _l.warning(f"Data received = {event}")
+        event['type'] = 'plot.data'
+        await self.sendMessage(event)
+
     async def replay_data(self, event):
         await self.sendMessage(event)
 

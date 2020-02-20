@@ -10,6 +10,7 @@ from celery.contrib.abortable import AbortableTask
 from celery.utils.log import get_task_logger
 
 from common import influxdb, time as _time
+from drivers.ardoven import driver as ardoven_driver
 
 
 COUNTER_MAX = 5000
@@ -32,7 +33,7 @@ def saveDelay(taskpk, timestamp, delay, jitter):
     ovendb.saveDelay(timestamp, delay, jitter)
 
 
-@shared_task(base=AbortableTask)
+@shared_task()
 def sendPlot(taskpk, sensorId, chunkSize=1024):
     """
     This function reads all the data for the plot from the database and returns it through a websocket in chunks of
@@ -79,37 +80,20 @@ def sendPlot(taskpk, sensorId, chunkSize=1024):
 
 
 @shared_task(bind=True, base=AbortableTask)
-def collectData(self, taskpk, counter=COUNTER_MAX):
+def collectData(self, taskpk, counter=COUNTER_MAX, channel_key='kuring', wait=1):
     taskid = self.request.id
-    group_key = f"task_{taskpk}"
-    async_to_sync(layer.group_add)('kuring', group_key)
-
     _l.info(f'Starting task (id = {taskid})')
 
-    while counter > 0 and not self.is_aborted():
-        time.sleep(1)
+    group_key = f"task_{taskpk}"
+    async_to_sync(layer.group_add)(channel_key, group_key)
 
-        x = COUNTER_MAX - counter
-        yA = math.cos(x)
-        yB = math.sin(x)
-
-        messageA = { 'type': 'plot.data', 'taskpk': taskpk, 'm': 'T1', 'x': x, 'y': yA, 't': _time.timestamp() }
-        messageB = { 'type': 'plot.data', 'taskpk': taskpk, 'm': 'T2', 'x': x, 'y': yB, 't': _time.timestamp() }
-
-        influxdbWrite.delay(taskpk, messageA)
-        influxdbWrite.delay(taskpk, messageB)
-
-        async_to_sync(layer.group_send)('kuring', messageA)
-        async_to_sync(layer.group_send)('kuring', messageB)
-
-        counter -= 1
-
-    if self.is_aborted():
-        _l.info(f'ABORTING task (id = {taskid})')
-    else:
-        _l.info(f'Ending task (id = {taskid})')
+    taskid = self.request.id
+    _l.debug(f"Running driver task for <Ardoven>, with taskid = <{taskid}>")
+    ardoven = ardoven_driver.ArdovenDriver(channel_key, group_key, taskpk)
+    ardoven.load(self)
+    ardoven.run()
 
     message = { 'type': 'task.finished', 'taskpk': taskpk, 'taskid': taskid, 'timestamp': _time.timestamp() }
-    async_to_sync(layer.group_send)('kuring', message)
-    async_to_sync(layer.group_discard)('kuring', group_key)
+    async_to_sync(layer.group_send)(channel_key, message)
+    async_to_sync(layer.group_discard)(channel_key, group_key)
     influxdb.CuringOven.cleanup(taskpk)

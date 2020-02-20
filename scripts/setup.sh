@@ -7,6 +7,21 @@
 # @author: ricardo@karbontek.co.jp
 
 
+setup_arduino () {
+
+  [[ -f "$arduino_udev" ]] && {
+    echo "<$arduino_udev> exists, skipping..."
+  } || {
+    sudo cp -f "$ardoven_udev" "$UDEV_ARDUINO_RULES"
+    echo "<$ardoven_udev> UDEV RULES copied to <$UDEV_ARDUINO_RULES>"
+  }
+
+  sudo cp -f "$ardoven_add_sh" "$UDEV_SCRIPTS_DIR/."
+  sudo cp -f "$ardoven_del_sh" "$UDEV_SCRIPTS_DIR/."
+
+}
+
+
 add_extra_repositories () {
   # docker repository
   sudo apt update
@@ -22,6 +37,7 @@ add_extra_repositories () {
 
 post_sys_install () {
   sudo usermod -aG docker "$USER"
+  sudo usermod -aG dialout "$USER"
   # TODO # this needs to be manually executed: su - ${USER}
 }
 
@@ -182,6 +198,9 @@ export __DJ_DEVPROD='dev'
 mkdir -p "$SECRETS_DIR"
 mkdir -p "$STATIC_DIR"
 # TODO # Remove if unnecessary: # mkdir -p "$CELERY_LOGS"
+
+setup_arduino
+exit -1
 
 # 1) Install Debian packages for DEVELOPMENT
 add_extra_repositories
