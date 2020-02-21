@@ -22,7 +22,7 @@ layer = channels.layers.get_channel_layer()
 def influxdbWrite(taskpk, message):
     _l.debug(f"Writing to influxdb: {message}")
     ovendb = influxdb.CuringOven.retrieve(taskpk)
-    ovendb.writePoint(message['m'], message['x'], message['y'])
+    ovendb.writePoint(message['m'], int(message['t']), message['y'])
 
 
 @shared_task

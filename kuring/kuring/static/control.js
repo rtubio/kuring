@@ -81,7 +81,7 @@ function decodeMessage(message) {
   if (data['type'] == 'info') { log('INF', str(data['message'])); return; }
   if (data['type'] == 'task.finished') { log('INF', 'Task finished!'); $('#taskFinished').modal(); return; }
   if (data['type'] == 'replay.data') { plotChunks(data); return; }
-  if (data['type'] == 'plot.data')   { plotPoint(data);  return; }
+  if (data['type'] == 'data.rx')   { plotPoint(data);  return; }
   if (data['type'] == 'notify.event')   { notifyEvent(data);  return; }
 
   log('ERR', 'Non-decodable data = ' + JSON.stringify(data));
@@ -181,7 +181,7 @@ function runOk__click(e) {
 function stopOk__click(e) {
   $("#confirmStop").modal('toggle');
   sendMessage(__wsock, {'type': 'stopTask'});
-  setControlsFinished(); log('Task stopped');
+  setControlsFinished(); log('[INF]', 'Task stopped');
 }
 
 

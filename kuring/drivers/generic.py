@@ -43,13 +43,13 @@ class Driver(object):
     def _notifyEvent(self, event, data):
         time = self._getTimestamp()
         message = { 'type': 'event.rx', 'taskpk': self._taskpk, 'event': event, 't': time, 'data': data }
-        async_to_sync(self._c.group_send)('kuring', message)
+        async_to_sync(self._c.group_send)(self.channelkey, message)
 
     def _notifyData(self, sensor, data):
         time = self._getTimestamp()
         x = time - self._t0
         message = { 'type': 'data.rx', 'taskpk': self._taskpk, 'm': sensor, 't': time, 'x': x, 'y': data }
-        async_to_sync(self._c.group_send)('kuring', message)
+        async_to_sync(self._c.group_send)(self._channelkey, message)
 
     def _getTimestamp(self):
         return _time.timestamp()

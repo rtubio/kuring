@@ -82,12 +82,8 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
         event['type'] = 'notify.event'
         await self.sendMessage(event)
 
-    async def plot_data(self, event):
-        await self.sendMessage(event)
-
     async def data_rx(self, event):
-        # _l.warning(f"Data received = {event}")
-        event['type'] = 'plot.data'
+        tasks.influxdbWrite.delay(event['taskpk'], event)
         await self.sendMessage(event)
 
     async def replay_data(self, event):
