@@ -3,8 +3,8 @@ var task_status = $("#taskStatus").html();
 var datefmt = { hour: "2-digit", minute: "2-digit", second: "2-digit" };
 var __plotId = 'graph1';
 var __plotData = {
-  'T1': {x: [], y: [], mode: 'lines', line: { width: 3}, name: 'temp_1', replay: false},
-  'T2': {x: [], y: [], mode: 'lines', line: { width: 3}, name: 'temp_2', replay: false},
+  'T1': {x: [], y: [], mode: 'lines', line: {width: 3}, name: 'temp_1', replay: false},
+  'T2': {x: [], y: [], mode: 'lines', line: {width: 3}, name: 'temp_2', replay: false},
 };
 var __navigating = false;   // flag that blocks the connection lost window from being launched during navigation
 var config = { responsive: true };
@@ -135,7 +135,8 @@ function plotChunks(data) {
   __plotData[sensor]['x'].splice(tx, 0, ...times);
   __plotData[sensor]['y'].splice(tx, 0, ...values);
 
-  //console.log('>>> CHUNK@sensor:' + sensor + '.plot([' + times[0] + ',' + times[times.length-1] + '],[' + values[0] + ',' + values[values.length-1] + ']');
+  //console.log('>>> CHUNK@sensor:' + sensor + '.plot([' + times[0] + ',' + \\
+  //  times[times.length-1] + '],[' + values[0] + ',' + values[values.length-1] + ']');
   //console.log(__plotData[sensor]['x'], __plotData[sensor]['y']);
 
   Plotly.redraw(__plotId);
@@ -210,11 +211,7 @@ $(document).ready(function(){
 function loadPlot () {
   // This function loads the data from the previous execution run if necessary.
   if (task_status == "N") { return; }
-  if (task_status == "R") {
-    // for (const [sensor, plot] of Object.entries(__plotData)) { __plotData[sensor].replay = true; }
-    requestPlotData(0, -1);
-    return;
-  }
+  if (task_status == "R") { requestPlotData(0, -1); return; }
   requestPlotData(0, -1);
 }
 
