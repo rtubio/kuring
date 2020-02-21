@@ -50,14 +50,21 @@ class ArdovenDriver(generic.Driver):
 
         return super(ArdovenDriver, self).load(*args, **kwargs)
 
-    def _sendStartCommand(self, ):
+    def _sendStartCommand(self):
         self._sendCommand(C_START)
+
+    def _sendStopCommand(self):
+        self._sendCommand(C_STOP)
 
     def _sendCommand(self, commandType):
         commandString = str(MARKER_MESSAGE) + str(commandType)
-        self._serial.write(C_START__STR.unicode('utf-8'))
+        self._serial.write(commandString.encode('utf-8'))
         self._serial.flush()
 
+    def stop(self, *args, **kwargs):
+        super(ArdovenDriver, self).stop(*args, **kwargs)
+        self._sendStopCommand()
+        self._serial.close()
 
     def run(self, *args, **kwargs):
         super(ArdovenDriver, self).run(*args, **kwargs)
@@ -109,5 +116,4 @@ class ArdovenDriver(generic.Driver):
                 type = -1
                 continue
 
-        self._serial.close()
-        self._l.info(f"Driver <{self.driverName}> ending...")
+        self._l.info(f"Driver <{self.driverName}> ending run!")

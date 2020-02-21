@@ -39,6 +39,13 @@ int TK_STABLE_WAIT = 250;       // miliseconds to wait after a thermocouple read
 int SERIAL_WAIT = 100;          // Serial port readiness waiting checkpoint
 
 int MARKER = 0x1FF1;          // Int marking the start of data transmission; the end is marked with a 'NL' character
+int MARKER_START = 0;
+int MARKER_LEN = 4;
+int MARKER_END = MARKER_START + MARKER_LEN;
+int COMMAND_START = MARKER_START + MARKER_LEN;
+int COMMAND_LEN = 1;
+int COMMAND_END = COMMAND_START + COMMAND_LEN;
+
 int heater1T = 0;             // Variable reference, 0 ~ heater 1, 1 ~ heater 2
 int heater2T = 1;             // Variable reference, 0 ~ heater 1, 1 ~ heater 2
 
@@ -73,8 +80,8 @@ int EVENTS[20] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
 bool SERIAL_ENABLED = true;
 
-unsigned long serialSpeed   = 115200;
-int serialTimeout = 500;      // timeout miliseconds; completing an approx. 1 second cycle
+unsigned long serialSpeed = 115200;
+int SERIAL_TIMEOUT = 600;      // timeout miliseconds; completing an approx. 1 second cycle
 
 bool stopActivated = false;   // Flag that marks whether the stop has been activated or not.
 bool startActivated = false;  // Flag that marks whether the task should start or not.
@@ -111,18 +118,31 @@ void dataTx(int sensor, float data) {
 
 void dataRx() {
 
-  int markerHead = Serial.parseInt();
-  if (markerHead == 0) { return; }
-  if (markerHead != MARKER) { eventTx(E_ERR_MARKERDIFFERS, markerHead); return; }
+  Serial.println("[deb] Waiting for header...");
+  String commandString = Serial.readString();
+  Serial.print(">> readout = "); Serial.println(commandString);
+  int marker__STR = commandString.substring(MARKER_START, MARKER_END).toInt();
+  Serial.print("[deb] marker read = "); Serial.println(marker__STR);
+  if (marker__STR == 0) { Serial.println("[deb] No marker read"); return; }
+  if (marker__STR != MARKER) {
+    if (SERIAL_ENABLED) {
+      Serial.print("[warn] Wrong H = "); Serial.print(marker__STR);
+      Serial.print(", expected = "); Serial.println(MARKER);
+    }
+    eventTx(E_ERR_MARKERDIFFERS, marker__STR);
+    return;
+  }
 
-  int command = Serial.parseInt();
-  if (command == COMMANDS[0]) { pause(); return; }
-  if (command == COMMANDS[1]) { resume(); return; }
-  if (command == COMMANDS[2]) { stop(); return; }
-  if (command == COMMANDS[3]) { start(); return; }
+  int command__STR = commandString.substring(COMMAND_START, COMMAND_END).toInt();
+  Serial.print("[info] Command read = "); Serial.println(command__STR);
 
-  eventTx(E_ERR_UNSUPPORTEDCOMMAND, command);
-  if (SERIAL_ENABLED) Serial.println("WARN!!! Unsupported command = " + command);
+  if (command__STR == COMMANDS[0]) { pause(); return; }
+  if (command__STR == COMMANDS[1]) { resume(); return; }
+  if (command__STR == COMMANDS[2]) { stop(); return; }
+  if (command__STR == COMMANDS[3]) { start(); return; }
+
+  eventTx(E_ERR_UNSUPPORTEDCOMMAND, command__STR);
+  if (SERIAL_ENABLED) Serial.println("WARN!!! Unsupported command = " + command__STR);
 
 }
 
@@ -153,21 +173,23 @@ void stop() {
   HEATER_2__stop = true;
   HEATER_4__stop = true;
   stopActivated = true;
+  digitalWrite(HEATER_2, LOW);
+  digitalWrite(HEATER_4, LOW);
 }
 
 void controlHeater (float temperature, float threshold, int relay, bool flag, char *name) {
   if (temperature > threshold) {
     eventTx(E_THERMALOFF, relay);
-    if (SERIAL_ENABLED) {Serial.print(*name); Serial.println(" above TH > Turn OFF");}
+    if (SERIAL_ENABLED) { Serial.print(*name); Serial.println(" above TH > Turn OFF"); }
     digitalWrite(relay, LOW);
   } else {
     if (flag == true) {
       eventTx(E_THERMALONPAUSED, relay);
-      if (SERIAL_ENABLED) {Serial.print(*name); Serial.println(" below TH > but PAUSED!");}
+      if (SERIAL_ENABLED) { Serial.print(*name); Serial.println(" below TH > but PAUSED!"); }
       digitalWrite(relay, HIGH);
     } else {
       eventTx(E_THERMALON, relay);
-      if (SERIAL_ENABLED) {Serial.print(*name); Serial.println(" below TH > Turn ON");}
+      if (SERIAL_ENABLED) { Serial.print(*name); Serial.println(" below TH > Turn ON"); }
       digitalWrite(relay, HIGH);
     }
   }
@@ -192,7 +214,7 @@ void waitStop (float t1, float t2) {
 
 void setup() {
 
-  Serial.setTimeout(serialTimeout);
+  Serial.setTimeout(SERIAL_TIMEOUT);
   Serial.begin(serialSpeed);
   while (!Serial) { delay(SERIAL_WAIT); }
 

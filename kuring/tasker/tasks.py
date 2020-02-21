@@ -34,7 +34,7 @@ def saveDelay(taskpk, timestamp, delay, jitter):
 
 
 @shared_task()
-def sendPlot(taskpk, sensorId, chunkSize=1024):
+def sendPlot(taskpk, sensorId, chunkSize=1024, channel_key='kuring'):
     """
     This function reads all the data for the plot from the database and returns it through a websocket in chunks of
     size 'chunkSize=1024'
@@ -44,7 +44,7 @@ def sendPlot(taskpk, sensorId, chunkSize=1024):
     chunkSize=1024 -- maximum number of points to be sent to the user interface through websocket
     """
     group_key = f"task_{taskpk}"
-    async_to_sync(layer.group_add)('kuring', group_key)
+    async_to_sync(layer.group_add)(channel_key, group_key)
 
     _l.info(f"[TASK.sendPlot] task = {taskpk}, sensorId = {sensorId}")
     ovendb = influxdb.CuringOven.retrieve(taskpk)
@@ -67,7 +67,7 @@ def sendPlot(taskpk, sensorId, chunkSize=1024):
             processed += 1
             # _l.debug(f"~~~~~ processed = {processed}, message = {message}")
 
-        async_to_sync(layer.group_send)('kuring', message)
+        async_to_sync(layer.group_send)(channel_key, message)
         _l.debug(f"Sent {messageSize} points, [{sent, sent+messageSize}], until = {message['ts'][-1]}")
 
         sent += messageSize
@@ -75,7 +75,7 @@ def sendPlot(taskpk, sensorId, chunkSize=1024):
         message['ts'] = []
         message['vs'] = []
 
-    async_to_sync(layer.group_discard)('kuring', group_key)
+    async_to_sync(layer.group_discard)(channel_key, group_key)
     influxdb.CuringOven.cleanup(taskpk)
 
 
@@ -92,6 +92,8 @@ def collectData(self, taskpk, counter=COUNTER_MAX, channel_key='kuring', wait=1)
     ardoven = ardoven_driver.ArdovenDriver(channel_key, group_key, taskpk)
     ardoven.load(self)
     ardoven.run()
+
+    ardoven.stop()
 
     message = { 'type': 'task.finished', 'taskpk': taskpk, 'taskid': taskid, 'timestamp': _time.timestamp() }
     async_to_sync(layer.group_send)(channel_key, message)
