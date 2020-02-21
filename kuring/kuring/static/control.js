@@ -34,9 +34,20 @@ var __t0 = -1;
 var __pingAlarm = window.setInterval(pingServer, KEEPALIVE);   // every 5 seconds, ping...;
 var __pingReset = 0;
 
+var E_SYSREADY = 1;
+var E_SYSWAITING = 2;
+var E_SYSPAUSED = 3;
+var E_SYSHALTING = 4;
+var E_THERMALOFF = 5;
+var E_THERMALONPAUSED = 6;
+var E_THERMALON = 7;
+var E_ERR_MARKERDIFFERS = 8;
+var E_ERR_UNSUPPORTEDCOMMAND = 9;
+
 
 __wsock.onopen = function() {
-  log('INF', 'CONNECTED to: ' + window.location.host); updateWsStatus(true);
+  log('INF', 'CONNECTED to: ' + window.location.host);
+  updateWsStatus(true);
   loadPlot();
 };
 
@@ -70,6 +81,7 @@ function decodeMessage(message) {
   if (data['type'] == 'task.finished') { log('INF', 'Task finished!'); $('#taskFinished').modal(); return; }
   if (data['type'] == 'replay.data') { plotChunks(data); return; }
   if (data['type'] == 'plot.data')   { plotPoint(data);  return; }
+  if (data['type'] == 'notify.event')   { notifyEvent(data);  return; }
 
   log('ERR', 'Non-decodable data = ' + JSON.stringify(data));
 
@@ -85,6 +97,17 @@ function triggerReplay(data) {
   sendPlotRequest (sensor, 0, until); // IMPORTANT: one sensor requests the data for all
 
   log('INF', '[REPLAY, triggered] sensor = ' + sensor + ', until ' + until);
+}
+
+
+function notifyEvent(data) {
+    // console.log('>> @notifyEvent, data = ' + JSON.stringify(data));
+    var type = data['event']; var payload = data['data'];
+    if (type == E_SYSREADY) { $("#fwStatus").html('ON'); return; }
+    if (type == E_SYSWAITING) { $("#fwStatus").html('READY'); return; }
+    if (type == E_SYSPAUSED) { $("#fwStatus").html('PAUSED'); return; }
+    if (type == E_SYSHALTING) { $("#fwStatus").html('HALTING'); return; }
+    if (type == E_SYSHALTED) { $("#fwStatus").html('OFF'); return; }
 }
 
 

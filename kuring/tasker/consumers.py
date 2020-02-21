@@ -78,6 +78,10 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
             return
         await self.send(text_data=json.dumps({'message': message}))
 
+    async def event_rx(self, event):
+        event['type'] = 'notify.event'
+        await self.sendMessage(event)
+
     async def plot_data(self, event):
         await self.sendMessage(event)
 
