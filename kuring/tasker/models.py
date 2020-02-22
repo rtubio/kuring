@@ -1,4 +1,3 @@
-import json
 import logging
 
 from celery.contrib.abortable import AbortableAsyncResult
@@ -6,10 +5,6 @@ from channels.db import database_sync_to_async
 from datetime import datetime
 from django.db import models
 from django.urls import reverse
-from django.dispatch import receiver
-from django.core.serializers.json import DjangoJSONEncoder
-
-from kuring import celery as kuringCelery
 
 _l = logging.getLogger(__name__)
 
@@ -41,16 +36,16 @@ def taskFinished(taskpk, abort=False):
     abort=False -- flag that indicates whether this method should also abort the celery task or not
     """
     _l.info(f"Task #{taskpk} stopped!")
-    object = Task.objects.get(pk=taskpk)
+    obj = Task.objects.get(pk=taskpk)
 
-    if object.status == Task.RUNNING:
-        object.status = Task.FINISHED
+    if obj.status == Task.RUNNING:
+        obj.status = Task.FINISHED
 
         if abort:
-            abortable_task = AbortableAsyncResult(object.task_id)
+            abortable_task = AbortableAsyncResult(obj.task_id)
             abortable_task.abort()
 
-        object.save()
+        obj.save()
 
     else:
         _l.error(f'Trying to stop task for object #{taskpk} but its satus is not ready')

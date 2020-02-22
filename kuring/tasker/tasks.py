@@ -1,11 +1,8 @@
 
 from asgiref.sync import async_to_sync
 import channels.layers
-import datetime
-import math
-import time
 
-from celery import current_app, shared_task
+from celery import shared_task
 from celery.contrib.abortable import AbortableTask
 from celery.utils.log import get_task_logger
 

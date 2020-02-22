@@ -1,5 +1,4 @@
 
-from asgiref.sync import async_to_sync
 from channels.generic import websocket
 import json
 import logging
@@ -29,7 +28,7 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
             _l.info(f'Accepted connection for task <{taskpk}>')
 
         except KeyError as ex:
-            _l.error(f"The call did not include the task key, cannot accept connection")
+            _l.error(f"The call did not include the task key, cannot accept connection, ex = {ex}")
 
     async def disconnect(self, close_code):
 
@@ -42,7 +41,7 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
                 return
 
         except KeyError as ex:
-            _l.error(f"The call did not include the task key")
+            _l.error(f"The call did not include the task key, ex = {ex}")
             return
 
         await self.channel_layer.group_discard('kuring', self.channel_name)
