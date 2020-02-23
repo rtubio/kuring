@@ -63,7 +63,6 @@ def sendPlot(taskpk, sensorId, chunkSize=1024, channel_key='kuring'):
             message['ts'].append(_time.iso2timestamp(measurement[sent+processed]['time']))
             message['vs'].append(measurement[sent+processed]['value'])
             processed += 1
-            # _l.debug(f"~~~~~ processed = {processed}, message = {message}")
 
         async_to_sync(layer.group_send)(channel_key, message)
         _l.debug(f"Sent {messageSize} points, [{sent, sent+messageSize}], until = {message['ts'][-1]}")

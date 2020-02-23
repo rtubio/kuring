@@ -1,11 +1,9 @@
-from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
 
-from kuring.celery import app as celeryApp
-from tasker import models, tasks
+from tasker import models
 
 
 class TaskDashboard(ListView):

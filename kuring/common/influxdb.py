@@ -27,11 +27,16 @@ _l = logging.getLogger(__name__)
 class CuringOven(object):
     """
     This object acts as an interface with the InfluxDB database for the data coming from the curing oven.
+
+    NOTICE: in order to avoid further confusion when it comes to write / read data from the InfluxDB database, the
+    following convention is adopted:
+
+    a) write methods > they will receive the timestamp as an integer with the number of miliseconds and transform
+                        it into an ISO datetime string to write it into the database
+    b) read methods > they will return the list of points "as they are" read from the database
     """
 
-
     _clients = {}
-
 
     @staticmethod
     def retrieve(taskId):
@@ -43,7 +48,6 @@ class CuringOven(object):
         CuringOven._clients[taskId] = oven
         _l.debug(f"[ADDED] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
         return oven
-
 
     @staticmethod
     def cleanup(taskId):
@@ -57,7 +61,6 @@ class CuringOven(object):
             _l.warn(f"Exception = {ex}")
             _l.warn(f"No client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}, skipping...")
             return
-
 
     def __init__(self, taskId):
 
@@ -95,10 +98,8 @@ class CuringOven(object):
             'dj-js': {'jitter': 'JJ'}
         }
 
-
     def close(self):
         self._client.close()
-
 
     def getMeasurement(self, sensorId):
         """
@@ -109,9 +110,7 @@ class CuringOven(object):
         """
         tags = self.id_2_tags[sensorId]
         query = self._client.query(f"select * from \"{self.measurement}\"")
-        all = list(query.get_points())
         return list(query.get_points(tags=tags))
-
 
     def writePoint(self, sensorId, timestamp, value, time_precision='ms'):
         _l.debug(f'[INFLUXDB, writePoint] :: timestamp = {timestamp}, type(timestamp) = {type(timestamp)}')
@@ -124,7 +123,6 @@ class CuringOven(object):
         }
         self._client.write_points([point], time_precision=time_precision)
 
-
     def saveDelay(self, timestamp, delay, jitter):
-        self.writePoint('JD', timestamp, delay*1000)
-        self.writePoint('JJ', timestamp, jitter*1000)
+        self.writePoint('JD', timestamp, delay)
+        self.writePoint('JJ', timestamp, jitter)

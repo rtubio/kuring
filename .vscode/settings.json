@@ -10,7 +10,8 @@
         ".__skr__/": true
     },
     "files.exclude": {
-        ".__skr__": true,
+        ".__skr__/": true,
+        ".vscode/": true,
         "**/migrations/": true
     }
 }
