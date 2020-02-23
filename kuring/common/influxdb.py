@@ -31,9 +31,15 @@ class CuringOven(object):
     NOTICE: in order to avoid further confusion when it comes to write / read data from the InfluxDB database, the
     following convention is adopted:
 
-    a) write methods > they will receive the timestamp as an integer with the number of miliseconds and transform
-                        it into an ISO datetime string to write it into the database
-    b) read methods > they will return the list of points "as they are" read from the database
+    a) write methods > they will receive the timestamp in either of the following formats: (a1) number of microseconds
+                        or miliseconds (matching "time_precision) as an unsigned integer; (a2) string ISO timestamp
+    b) read methods > they return the readout directly from the InfluxDB database, which is an ISO 8601 compliant
+                        string
+
+    WARNING: when writing the data into the database, the "time_precision" parameter needs to be carefully chosen since
+                it will determine whether the data stored will remove microseconds, miliseconds or other parts of the
+                data information. This might cause that the data read out from the database might not match the one that
+                was originally written.
     """
 
     _clients = {}
