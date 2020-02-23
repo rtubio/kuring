@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 import importlib.util
 import os
 import sys
+
 from celery import Celery
 from kuring import settings # import development, production
 

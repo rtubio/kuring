@@ -1,6 +1,5 @@
 # Project specific ignore routes
 .__skr__/
-kuring/.env/
 static/
 !kuring/kuring/static/
 node_modules/

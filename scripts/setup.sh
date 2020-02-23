@@ -199,24 +199,24 @@ mkdir -p "$SECRETS_DIR"
 mkdir -p "$STATIC_DIR"
 # TODO # Remove if unnecessary: # mkdir -p "$CELERY_LOGS"
 
+# 1) Setting up Arduino environment
 setup_arduino
-exit -1
 
-# 1) Install Debian packages for DEVELOPMENT
+# 2) Install Debian packages for DEVELOPMENT
 add_extra_repositories
 install_sys_packages
 post_sys_install
 
-# 2) Setup Python and Javascript environments
+# 3) Setup Python and Javascript environments
 install_env_packages
 npm install
 
-# 3) Setup influxDB and REDIS
+# 4) Setup influxDB and REDIS
 install_influxdb
 install_redis
 
-# 4) Setup Django
+# 5) Setup Django
 install_django
 
-# 5) Restore environment and leave
+# 6) Restore environment and leave
 deactivate

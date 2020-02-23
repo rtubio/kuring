@@ -2,6 +2,7 @@
 from asgiref.sync import async_to_sync
 import channels.layers
 
+
 from celery import shared_task
 from celery.contrib.abortable import AbortableTask
 from celery.utils.log import get_task_logger
@@ -92,7 +93,7 @@ def collectData(self, taskpk, counter=COUNTER_MAX, channel_key='kuring', wait=1)
 
     ardoven.stop()
 
-    message = { 'type': 'task.finished', 'taskpk': taskpk, 'taskid': taskid, 'timestamp': _time.timestamp() }
+    message = {'type': 'task.finished', 'taskpk': taskpk, 'taskid': taskid, 'timestamp': _time.timestamp()}
     async_to_sync(layer.group_send)(channel_key, message)
     async_to_sync(layer.group_discard)(channel_key, group_key)
     influxdb.CuringOven.cleanup(taskpk)
