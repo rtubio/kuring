@@ -39,12 +39,12 @@ class CuringOven(object):
     _clients = {}
 
     @staticmethod
-    def retrieve(taskId):
+    def retrieve(taskId, dbname=None):
         if taskId in CuringOven._clients:
             _l.debug(f"[GOT] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
             return CuringOven._clients[taskId]
 
-        oven = CuringOven(taskId)
+        oven = CuringOven(taskId, dbname=dbname)
         CuringOven._clients[taskId] = oven
         _l.debug(f"[ADDED] InfluxDB client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}")
         return oven
@@ -62,7 +62,7 @@ class CuringOven(object):
             _l.warn(f"No client for task #{taskId}, clients.keys = {CuringOven._clients.keys()}, skipping...")
             return
 
-    def __init__(self, taskId):
+    def __init__(self, taskId, dbname=None):
 
         # This is the schema for the curing oven; this oven consists of a set of sensors for temperature, pressure
         # and frame closing status
@@ -73,13 +73,18 @@ class CuringOven(object):
 
         _l.debug(f"settings: {settings.INFLUXDB_DBNAME}")
 
+        if dbname:
+            influxdbname = dbname
+        else:
+            influxdbname = settings.INFLUXDB_DBNAME
+
         self._client = InfluxDBClient(
             username=settings.INFLUXDB_USRNAME,
             password=settings.INFLUXDB_USRPWD,
-            database=settings.INFLUXDB_DBNAME
+            database=influxdbname
         )
 
-        self.id_2_tags = {
+        self.sensorId_2_tags = {
             'T1': {'sensor': 'plate', 'variable': 'temperature', 'units': 'degC'},
             'T2': {'sensor': 'chamber', 'variable': 'temperature', 'units': 'degC'},
             'P1': {'sensor': 'bag', 'variable': 'pressure', 'units': 'psi'},
@@ -108,13 +113,12 @@ class CuringOven(object):
 
         sensorId -- predefined sensor identifier
         """
-        tags = self.id_2_tags[sensorId]
+        tags = self.sensorId_2_tags[sensorId]
         query = self._client.query(f"select * from \"{self.measurement}\"")
         return list(query.get_points(tags=tags))
 
     def writePoint(self, sensorId, timestamp, value, time_precision='ms'):
-        _l.debug(f'[INFLUXDB, writePoint] :: timestamp = {timestamp}, type(timestamp) = {type(timestamp)}')
-        tags = self.id_2_tags[sensorId]
+        tags = self.sensorId_2_tags[sensorId]
         point = {
             "measurement": self.measurement,
             "time": timestamp,

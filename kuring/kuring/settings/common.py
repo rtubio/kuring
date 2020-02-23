@@ -1,9 +1,6 @@
 
-import importlib.util
-import logging
 import json
 import os
-import sys
 
 
 """Django COMMON settings for kuring project."""
@@ -19,7 +16,6 @@ def configurationConstructor(module, mode, debug, hosts, databaseConfig):
 
 class ConfigurationBuilder():
 
-
     def __init__(self, mode, debug, hosts, databaseConfig, loglevel='INFO'):
         """Basic constructor"""
         self.mode = mode
@@ -34,9 +30,6 @@ class ConfigurationBuilder():
         self.database()
         self.celery()
         self.influxdb()
-
-        # print(f"@@@@@ = {logging.config.dictConfig}")
-
 
     def __str__(self):
         """This function prints a basic configuration status message."""
@@ -63,12 +56,12 @@ class ConfigurationBuilder():
                 }
             },
             'loggers': {
-                'django':{'level': self.loglevel, 'handlers': ['console'], 'propagate': False},
-                'kuring':{'level': self.loglevel, 'handlers': ['console'], 'propagate': False},
-                'tasker':{'level': self.loglevel, 'handlers': ['console'], 'propagate': False}
+                'django': {'level': self.loglevel, 'handlers': ['console'], 'propagate': False},
+                'common': {'level': self.loglevel, 'handlers': ['console'], 'propagate': False},
+                'kuring': {'level': self.loglevel, 'handlers': ['console'], 'propagate': False},
+                'tasker': {'level': self.loglevel, 'handlers': ['console'], 'propagate': False}
             }
         }
-
 
     def database(self):
         """This function loads the configuration for the database from the given file."""
@@ -91,7 +84,6 @@ class ConfigurationBuilder():
             }
         }
 
-
     def celery(self, config='../config/celery.json'):
         """This function loads the configuration for Celery from a given file"""
         # NOTE # for backend configuraiton: # 'redis://localhost:6379/0' # 'django-db'
@@ -107,7 +99,6 @@ class ConfigurationBuilder():
         self.config['CELERY_TASK_SERIALIZER'] = celery_cfg['task-serializer']
         self.config['CELERY_RESULT_SERIALIZER'] = celery_cfg['result-serializer']
 
-
     def influxdb(self, config='../.__skr__/influxdb.json'):
         """This function loads the configuration for InfluxDB from a given file"""
 
@@ -119,7 +110,6 @@ class ConfigurationBuilder():
         self.config['INFLUXDB_ADMINPWD'] = cfg['admp']
         self.config['INFLUXDB_USRNAME'] = cfg['usrn']
         self.config['INFLUXDB_USRPWD'] = cfg['usrp']
-
 
     def django(self):
 
@@ -161,11 +151,11 @@ class ConfigurationBuilder():
             'django.contrib.messages',
             'django.contrib.sites',
             'django.contrib.staticfiles',
-            ### deps
+            # ### deps
             'bootstrap4',
             'django_icons',
             'channels',
-            ### 自分で
+            # ### 自分で
             'tasker'
         ]
 
@@ -198,20 +188,19 @@ class ConfigurationBuilder():
         # Password validation
         # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
         self.config['AUTH_PASSWORD_VALIDATORS'] = [
-            {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-            {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-            {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-            {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+            {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+            {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+            {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+            {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'}
         ]
-
 
         self.config['CHANNEL_LAYERS'] = {
             'default': {
                 'BACKEND': 'channels_redis.core.RedisChannelLayer',
                 'CONFIG': {
-                    'hosts': [('127.0.0.1', 6379),],
-                },
-            },
+                    'hosts': [('127.0.0.1', 6379)]
+                }
+            }
         }
 
         # Extra static file directories, outside of the common 'static' for all apps
