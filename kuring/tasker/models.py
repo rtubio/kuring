@@ -110,7 +110,6 @@ def taskFinished(taskpk, abort=False):
     obj = Task.objects.get(pk=taskpk)
 
     if obj.status == RUNNING:
-        obj.status = FINISHED
 
         if abort:
             abortable_task = AbortableAsyncResult(obj.task_id)
@@ -121,7 +120,7 @@ def taskFinished(taskpk, abort=False):
         event.save()
 
         obj.events.add(event)
-
+        obj.status = FINISHED
         obj.save()
 
     else:
