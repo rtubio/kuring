@@ -5,19 +5,90 @@ from channels.db import database_sync_to_async
 from datetime import datetime
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
+
 
 _l = logging.getLogger(__name__)
+
+
+NEW = 'N'
+RUNNING = 'R'
+PAUSED = 'P'
+FINISHED = 'D'
+
+STATUS_CHOICES = [
+    (NEW, 'New'), (RUNNING, 'Running'), (PAUSED, 'Paused'), (FINISHED, 'Finished'),
+]
+
+
+class Events(models.Model):
+
+    class Meta:
+        ordering = ('timestamp',)
+
+    timestamp = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="Timestamp marking when the event occurred, autofilled by model creation"
+    )
+
+    event = models.CharField(
+        default=RUNNING, editable=False, max_length=1, choices=STATUS_CHOICES,
+        verbose_name="Execution status for this experiment, 1 character among the available options"
+    )
+
+
+class Task(models.Model):
+
+    class Meta:
+        ordering = ('created',)
+
+    name = models.CharField(
+        default='', max_length=100,
+        verbose_name='Name of the experiment, to be used as a reference'
+    )
+
+    created = models.DateTimeField(
+        default=datetime.now, editable=False, blank=True,
+        verbose_name='Date of creation of the experiment object'
+    )
+
+    status = models.CharField(
+        default=NEW, editable=False, max_length=1, choices=STATUS_CHOICES,
+        verbose_name="Execution status for this experiment, 1 character among the available options"
+    )
+
+    events = models.ManyToManyField(
+        Events,
+        verbose_name="List of events related with the execution lifecycle of this task"
+    )
+
+    task_id = models.CharField(
+        default='', max_length=255, null=True, blank=True, editable=False,
+        verbose_name="Identifier of the task launched with Celery for the experiment execution"
+    )
+
+    result = models.TextField(default='', blank=False, verbose_name="Task result, serialized JSON object")
+
+    def get_absolute_url(self):
+        return reverse('dashboard')
+
+    def __unicode__(self):
+        return self.name
 
 
 @database_sync_to_async
 def taskLaunched(taskpk, taskid):
     _l.info(f"Task #{taskpk} launched!")
-    object = Task.objects.get(pk=taskpk)
+    obj = Task.objects.get(pk=taskpk)
 
-    if object.status == Task.NEW:
-        object.status = Task.RUNNING
-        object.task_id = taskid
-        object.save()
+    if obj.status == NEW:
+
+        event = Events.objects.create()
+        obj.events.add(event)
+
+        obj.status = RUNNING
+        obj.task_id = taskid
+        obj.save()
 
     else:
         _l.error(f'Trying to launch task #{taskid} but its satus is not ready')
@@ -38,55 +109,20 @@ def taskFinished(taskpk, abort=False):
     _l.info(f"Task #{taskpk} stopped!")
     obj = Task.objects.get(pk=taskpk)
 
-    if obj.status == Task.RUNNING:
-        obj.status = Task.FINISHED
+    if obj.status == RUNNING:
+        obj.status = FINISHED
 
         if abort:
             abortable_task = AbortableAsyncResult(obj.task_id)
             abortable_task.abort()
 
+        event = Events.objects.create()
+        event.event = FINISHED
+        event.save()
+
+        obj.events.add(event)
+
         obj.save()
 
     else:
         _l.error(f'Trying to stop task for object #{taskpk} but its satus is not ready')
-
-
-class Task(models.Model):
-
-    class Meta:
-        ordering = ('created',)
-
-    NEW = 'N'
-    RUNNING = 'R'
-    PAUSED = 'P'
-    FINISHED = 'D'
-
-    STATUS_CHOICES = [
-        (NEW, 'New'), (RUNNING, 'Running'), (PAUSED, 'Paused'), (FINISHED, 'Finished'),
-    ]
-
-    name = models.CharField(
-        default='', max_length=100,
-        verbose_name='Name of the experiment, to be used as a reference'
-    )
-    created = models.DateTimeField(
-        default=datetime.now, editable=False, blank=True,
-        verbose_name='Date of creation of the experiment object'
-    )
-
-    status = models.CharField(
-        default=NEW, editable=False, max_length=1, choices=STATUS_CHOICES,
-        verbose_name="Execution status for this experiment, 1 character among the available options")
-
-    task_id = models.CharField(
-        default='', max_length=255, null=True, blank=True, editable=False,
-        verbose_name="Identifier of the task launched with Celery for the experiment execution"
-    )
-
-    result = models.TextField(default='', blank=False, verbose_name="Task result, serialized JSON object")
-
-    def get_absolute_url(self):
-        return reverse('dashboard')
-
-    def __unicode__(self):
-        return self.name
