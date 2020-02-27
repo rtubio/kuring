@@ -45,6 +45,7 @@ class Tasker(websocket.AsyncJsonWebsocketConsumer):
             return
 
         await self.channel_layer.group_discard('kuring', self.channel_name)
+        super(Tasker, self).disconnect(close_code)
 
     async def receive(self, text_data):
         _l.debug(f'> text_data = {text_data}')

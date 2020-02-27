@@ -3,7 +3,7 @@ import channels
 import logging
 
 
-from common import time as _time
+from common import influxdb, time as _time
 
 
 class Driver(object):
@@ -18,12 +18,13 @@ class Driver(object):
 
         self._l = logging.getLogger(self.driverName)
         self._c = channels.layers.get_channel_layer()
-        self._t0 = self._getTimestamp()
 
         self._channelkey = channelkey
         self._groupkey = groupkey
         self._taskpk = taskpk
         async_to_sync(self._c.group_add)(self._channelkey, self._groupkey)
+
+        self._ovendb = influxdb.CuringOven.retrieve(self._taskpk)
 
         self._l.info(f"Driver {self.driverName} initialized")
 
@@ -41,15 +42,15 @@ class Driver(object):
         self._l.info(f"Driver {__name__} paused")
 
     def _notifyEvent(self, event, data):
-        time = self._getTimestamp()
-        message = { 'type': 'event.rx', 'taskpk': self._taskpk, 'event': event, 't': time, 'data': data }
-        async_to_sync(self._c.group_send)(self.channelkey, message)
-
-    def _notifyData(self, sensor, data):
-        time = self._getTimestamp()
-        x = time - self._t0
-        message = { 'type': 'data.rx', 'taskpk': self._taskpk, 'm': sensor, 't': time, 'x': x, 'y': data }
+        time = _time.timestamp()
+        message = {'type': 'event.rx', 'taskpk': self._taskpk, 'event': event, 't': time, 'data': data}
+        self._l.info(f"@ardoven.event - time = {time}, data = {data}")
         async_to_sync(self._c.group_send)(self._channelkey, message)
 
-    def _getTimestamp(self):
-        return _time.timestamp()
+    def _notifyData(self, sensor, data):
+        time = _time.timestamp()
+        message = {'type': 'data.rx', 'taskpk': self._taskpk, 'm': sensor, 't': time, 'y': data}
+        self._l.info(f"@ardoven.data - time = {time}, data = {data}")
+
+        self._ovendb.writePoint(message['m'], int(message['t']*1000), message['y'])
+        async_to_sync(self._c.group_send)(self._channelkey, message)

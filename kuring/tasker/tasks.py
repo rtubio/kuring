@@ -20,7 +20,7 @@ layer = channels.layers.get_channel_layer()
 def influxdbWrite(taskpk, message):
     _l.debug(f"Writing to influxdb: {message}")
     ovendb = influxdb.CuringOven.retrieve(taskpk)
-    ovendb.writePoint(message['m'], int(message['t']), message['y'])
+    ovendb.writePoint(message['m'], int(message['t']*1000), message['y'])
 
 
 @shared_task
@@ -28,7 +28,7 @@ def saveDelay(taskpk, timestamp, delay, jitter):
     _l.debug(f"Writing to influxdb: task#{taskpk} > delay (us): {delay} jitter (us): {jitter}")
     _l.debug(f'timestamp = {timestamp}, type(timestamp) = {type(timestamp)}')
     ovendb = influxdb.CuringOven.retrieve(taskpk)
-    ovendb.saveDelay(timestamp, delay, jitter)
+    ovendb.saveDelay(int(timestamp), delay, jitter)
 
 
 @shared_task()
@@ -86,10 +86,11 @@ def collectData(self, taskpk, counter=COUNTER_MAX, channel_key='kuring', wait=1)
 
     taskid = self.request.id
     _l.debug(f"Running driver task for <Ardoven>, with taskid = <{taskid}>")
+
     ardoven = ardoven_driver.ArdovenDriver(channel_key, group_key, taskpk)
     ardoven.load(self)
-    ardoven.run()
 
+    ardoven.run()
     ardoven.stop()
 
     message = {'type': 'task.finished', 'taskpk': taskpk, 'taskid': taskid, 'timestamp': _time.timestamp()}

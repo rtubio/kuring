@@ -8,3 +8,7 @@ def timestamp(timezone=tz.utc):
 
 def iso2timestamp(isoString):
     return parser.isoparse(isoString).timestamp()
+
+
+def utctimestamp2iso(timestamp):
+    return dt.utcfromtimestamp(timestamp).isoformat()

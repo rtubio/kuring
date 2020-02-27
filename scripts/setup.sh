@@ -146,7 +146,7 @@ install_influxdb () {
 # docker exec kuring-influxdb /init-influxdb.sh
 # docker exec kuring-influxdb influxd config > /tmp/influxdb.conf
 
-  python "$influxdb_py" "$dbname" "$usrname" "$usrpass" "admin" "$admpass"
+  python "$init_influxdb_py" "$dbname" "$usrname" "$usrpass" "admin" "$admpass"
 
   create_influxdb_secret "$SECRETS_INFLUXDB" "$admpass" "$usrname" "$usrpass" "$dbname"
 

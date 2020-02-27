@@ -113,14 +113,14 @@ function notifyEvent(data) {
 
 
 function plotPoint(data) {
-  var sensor = data['m'];
-  var tx = findInsertionPointBackwards(sensor, data['x']);
+  var sensor = data['m']; var time = data['t']; var value = data['y'];
+  var tx = findInsertionPointBackwards(sensor, time);
 
-  __plotData[sensor]['x'].splice(tx + 1, 0, data['x']);
-  __plotData[sensor]['y'].splice(tx + 1, 0, data['y']);
+  __plotData[sensor]['x'].splice(tx + 1, 0, time);
+  __plotData[sensor]['y'].splice(tx + 1, 0, value);
 
-  //console.log('>>> POINT@sensor:' + sensor + '.plotPoint(' + data['x'] + ',' + data['y'] + ')');
-  //console.log(__plotData[sensor]['x'], __plotData[sensor]['y']);
+  // console.log('>>> POINT@sensor:' + sensor + '.plotPoint(' + time + ',' + value + ')');
+  // console.log(__plotData[sensor]['x'], __plotData[sensor]['y']);
 
   Plotly.redraw(__plotId);
   reportDelay(data);
@@ -135,9 +135,8 @@ function plotChunks(data) {
   __plotData[sensor]['x'].splice(tx, 0, ...times);
   __plotData[sensor]['y'].splice(tx, 0, ...values);
 
-  //console.log('>>> CHUNK@sensor:' + sensor + '.plot([' + times[0] + ',' + \\
-  //  times[times.length-1] + '],[' + values[0] + ',' + values[values.length-1] + ']');
-  //console.log(__plotData[sensor]['x'], __plotData[sensor]['y']);
+  // console.log('>>> CHUNK@sensor:' + sensor + '.plot([' + times[0] + ',' + times[times.length-1] + '],[' + values[0] + ',' + values[values.length-1] + ']');
+  // console.log(__plotData[sensor]['x'], __plotData[sensor]['y']);
 
   Plotly.redraw(__plotId);
 }
@@ -209,7 +208,6 @@ $(document).ready(function(){
 
 
 function loadPlot () {
-  // This function loads the data from the previous execution run if necessary.
   if (task_status == "N") { return; }
   if (task_status == "R") { requestPlotData(0, -1); return; }
   requestPlotData(0, -1);
@@ -275,9 +273,12 @@ function reportDelay (data) {
 
 function updateWsDelayStats(data) {
 
-  __wsDelayT = timestamp()
+  __wsDelayT = timestamp();
   var delay = __wsDelayT - parseInt(data['t']*1000, 10);
   var jitter = Math.abs(__wsDelayPrev - delay);
+
+  // console.log('>>> @delay::data_t', data['t']);
+  // console.log('>>> @delay:time', __wsDelayT, delay, jitter);
 
   __wsDelayN += 1;
   __wsDelay = __wsDelay + (delay - __wsDelay) / __wsDelayN;

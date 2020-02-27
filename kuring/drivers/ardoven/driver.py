@@ -1,6 +1,4 @@
-import logging
 import serial
-import time
 
 from drivers import generic
 
@@ -104,12 +102,17 @@ class ArdovenDriver(generic.Driver):
                         self._notifyData(sensor, data)
 
                 else:
-                    type = -1
                     self._l.debug(ser_bytes)
+                    type = -1
                     continue
 
             except KeyError as ex:
                 self._l.warning(f"<{type}> is unsupported, dropping data = {ser_bytes.decode('utf-8')}, ex = {ex}")
+                type = -1
+                continue
+            except ValueError:
+                self._l.debug(f"Log message from ardoven: {ser_bytes}")
+                type = -1
                 continue
             except Exception as ex:
                 self._l.warning(f"Excepton ex = {ex}, serialData = {ser_bytes}")

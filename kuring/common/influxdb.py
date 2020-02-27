@@ -2,6 +2,7 @@ from django.conf import settings
 from influxdb import InfluxDBClient
 import logging
 
+from common import time as _time
 
 _l = logging.getLogger(__name__)
 
@@ -69,9 +70,9 @@ class CuringOven(object):
             return
 
     def __init__(self, taskId, dbname=None):
-
         # This is the schema for the curing oven; this oven consists of a set of sensors for temperature, pressure
         # and frame closing status
+
         self.device = "testing"
         self.measurement = f"oven#{taskId}"
         self.fields = ['value']
@@ -125,14 +126,17 @@ class CuringOven(object):
 
     def writePoint(self, sensorId, timestamp, value, time_precision='ms'):
         tags = self.sensorId_2_tags[sensorId]
+        timestamp = _time.utctimestamp2iso(timestamp / 1000)
         point = {
             "measurement": self.measurement,
             "time": timestamp,
             "tags": {**tags, "device": self.device},
             "fields": {"value": value}
         }
+        _l.info(f'point = {point}')
+        _l.info(f'value = ({value}, {type(value)}), precision = {time_precision}, timestr = {timestamp}')
         self._client.write_points([point], time_precision=time_precision)
 
     def saveDelay(self, timestamp, delay, jitter):
-        self.writePoint('JD', timestamp, delay)
-        self.writePoint('JJ', timestamp, jitter)
+        self.writePoint('JD', timestamp, delay*1.0)
+        self.writePoint('JJ', timestamp, jitter*1.0)
