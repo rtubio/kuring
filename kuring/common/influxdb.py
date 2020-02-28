@@ -7,7 +7,8 @@ from common import time as _time
 _l = logging.getLogger(__name__)
 
 
-""" JSON body example, taken from: https://influxdb-python.readthedocs.io/en/latest/examples.html
+"""
+    JSON body example, taken from: https://influxdb-python.readthedocs.io/en/latest/examples.html
         json_body = [{
             "measurement": "test#cpu_load_short",
             "tags": {
