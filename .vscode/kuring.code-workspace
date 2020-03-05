@@ -5,9 +5,6 @@
 		},
 		{
 			"path": "../../../rtubio/toolbox"
-		},
-		{
-			"path": "/run/user/1000/gvfs/sftp:host=toro.local,user=rtubio/home/rtubio/mlx90640-library/examples"
 		}
 	]
 }
