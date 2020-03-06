@@ -1,16 +1,9 @@
 {
 	"folders": [
-		{
-			"path": "../."
-		},
-		{
-			"path": "../../../rtubio/toolbox"
-		},
-		{
-			"path": "/run/user/1000/gvfs/sftp:host=tachiuo.local,user=rtubio/home/rtubio/mlx90640-library"
-		},
-		{
-			"path": "/run/user/1000/gvfs/sftp:host=tachiuo.local,user=rtubio/home/rtubio/kuring"
+		{"path": "../."},
+		{"path": "../../../rtubio/toolbox"}, {
+			"uri": "sftp://rtubio@tachiuo.local/home/rtubio/kuring",
+			"name": "kuring@tachiuo"
 		}
 	]
 }
