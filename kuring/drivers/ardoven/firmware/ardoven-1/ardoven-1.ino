@@ -13,7 +13,7 @@ bool HEATER_3__stop = false;  // Flag that marks the HEATER_3 to stop its functi
 bool HEATER_4__stop = false;  // Flag that marks the HEATER_4 to stop its functioning
 
 int th_CLK = 13;
-int th_SO = 12;     // Common output for all thermistors, need to check several in parallel.
+int th_SO = 12;     // Common data output
 int th_1_CS = 11;   // Select output from first thermistor
 int th_2_CS = 10;   // Select output from second thermistor
 

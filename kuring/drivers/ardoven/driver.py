@@ -111,7 +111,7 @@ class ArdovenDriver(generic.Driver):
                 type = -1
                 continue
             except ValueError:
-                self._l.debug(f"Log message from ardoven: {ser_bytes}")
+                self._l.warning(f"Log message from ardoven: {ser_bytes}")
                 type = -1
                 continue
             except Exception as ex:

@@ -54,7 +54,7 @@ void setup() {
   digitalWrite(gndPin, LOW);
   // wait for MAX chip to stabilize
   Serial.println("MAX6675 test");
-  delay(500);
+  delay(1000);
 
   //Set the number I/O port to outputs
   for (int i = BASE; i < BASE + NUM; i ++) {
@@ -67,27 +67,27 @@ void loop() {
 
   float th_1_in = th_1.readCelsius();
   unsigned long th_1_ts = millis();
-  dataTx(heater1T, th_1_in, th_1_ts);
+  // dataTx(heater1T, th_1_in, th_1_ts);
   delay(250);
 
   float th_2_in = th_2.readCelsius();
   unsigned long th_2_ts = millis();
-  dataTx(heater2T, th_2_in, th_2_ts);
-  delay(250);
+  // dataTx(heater2T, th_2_in, th_2_ts);
+  delay(500);
 
-  if (th_1_in > TARGET_T1_PLATE) {
-    Serial.println("[plate, heater] above TH > Turn OFF");
-    digitalWrite(HEATER_2, LOW);
+  if (th_1_in > PLT_MAXTEMP) {
+    Serial.print("[plate, heater] above TH > Turn OFF | "); Serial.println(th_1_in);
+    digitalWrite(HEATER_2, LOW); 
   } else {
-    Serial.println("[plate, heater] below TH > Turn ON");
+    Serial.print("[plate, heater] below TH > Turn ON | "); Serial.println(th_1_in);
     digitalWrite(HEATER_2, HIGH);
   }
 
-  if (th_2_in > TARGET_T2_CAMERA) {
-    Serial.println("[CAMERA, heater] above TH > Turn OFF");
+  if (th_2_in > CAM_MAXTEMP) {
+    Serial.print("[CAMERA, heater] above TH > Turn OFF | "); Serial.println(th_2_in);
     digitalWrite(HEATER_4, LOW);
   } else {
-    Serial.println("[CAMERA, heater] below TH > Turn ON");
+    Serial.print("[CAMERA, heater] below TH > Turn ON | "); Serial.println(th_1_in);
     digitalWrite(HEATER_4, HIGH);
   }
 
