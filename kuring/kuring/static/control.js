@@ -13,7 +13,7 @@ var layout = {
   showlegend: true,
   plot_bgcolor: "rgba(248, 249, 250, 0)",
   paper_bgcolor: "rgba(248, 249, 250, 0)",
-  xaxis: { title: { text: 'time (s)' }, range: [0, 6000], autorange: true },
+  xaxis: { title: { text: 'time (s)' }, range: [0, 6000], autorange: true, type: 'date' },
   yaxis: { title: { text: 'Temperature (degC)' }, range: [-10, 150], autorange: true }
 };
 var __plot = Plotly.newPlot(__plotId, [__plotData['T1'], __plotData['T2']], layout, config);

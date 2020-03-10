@@ -107,7 +107,12 @@ def taskFinished(taskpk, abort=False):
     abort=False -- flag that indicates whether this method should also abort the celery task or not
     """
     _l.info(f"Task #{taskpk} stopped!")
-    obj = Task.objects.get(pk=taskpk)
+
+    try:
+        obj = Task.objects.get(pk=taskpk)
+    except Exception as ex:
+        _l.warning(f"Task <{taskpk}> could not be found to be stopped (ex = {ex}), skipping...")
+        return
 
     if obj.status == RUNNING:
 
