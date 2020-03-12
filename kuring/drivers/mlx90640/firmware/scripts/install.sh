@@ -74,6 +74,7 @@ source "conf/integration.conf"
 }
 
 # 3) Create configuration streamer
+[[ ! -f "$streamer_conf" ]] && {
     create_streamer_conf "$streamer_conf" "$FPS" "$REMOTE_HOST" "$REMOTE_PORT"
 } || {
     echo "[$0] Streamer configuration file <$streamer_conf> exists, skipping..."
