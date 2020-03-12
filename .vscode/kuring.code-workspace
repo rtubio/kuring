@@ -1,10 +1,13 @@
 {
 	"folders": [
-		{"path": "../."},
-		{"path": "../../../rtubio/toolbox"}, {
+		{
+			"path": "../."
+		},
+		{
 			"uri": "sftp://rtubio@tachiuo.local/home/rtubio/kuring",
 			"name": "kuring@tachiuo"
-		}, {
+		},
+		{
 			"uri": "sftp://rtubio@tachiuo.local/home/rtubio/mlx90640-library",
 			"name": "mlx90640@tachiuo"
 		}
