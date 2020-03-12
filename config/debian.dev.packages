@@ -7,6 +7,10 @@ curl
 gnupg2
 software-properties-common
 
+# Arudion packages
+arduino-mk
+python-serial
+
 # Python virtualenv
 virtualenv
 
