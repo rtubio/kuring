@@ -4,6 +4,7 @@ static/
 !kuring/kuring/static/
 node_modules/
 package-lock.json
+.env-*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
