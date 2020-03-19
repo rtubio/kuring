@@ -4,11 +4,12 @@
 #include <Adafruit_INA219.h>
 #include <Adafruit_MLX90614.h>
 
-#define SERIAL_SPEED    9600          // Serial port speed
-#define SERIAL_WAIT     100           // Serial port readiness waiting checkpoint
-#define SERIAL_TIMEOUT  600           // timeout miliseconds; completing an approx. 1 second cycle
+#define SERIAL_SPEED        9600          // Serial port speed
+#define SERIAL_WAIT         100           // Serial port readiness waiting checkpoint
+#define SERIAL_TIMEOUT      600           // timeout miliseconds; completing an approx. 1 second cycle
 
-#define PAUSE 100
+#define PAUSE               100
+#define ELOAD_PIN           2
 
 #define I2C_DISCOVER_WAIT   100      // ms delay after looking for I2C slaves
 #define I2C_FIRST_ADDRESS   8        // address of the first slave in the I2C bus
@@ -33,7 +34,8 @@ Adafruit_INA219 ina219(I2C_INA219_ADDR);
 Adafruit_MLX90614 mlx90614 = Adafruit_MLX90614();
 
 
-// float acs721_current = 0.0;
+int eloadGain         = 0;
+float acs721_current  = 0.0;
 float shuntVoltage_mV = 0.0, busVoltage = 0.0, loadCurrent_mA = 0.0, loadVoltage = 0.0;
 double ambienceT_degC = 0.0, objectT_degC = 0.0;
 
@@ -82,13 +84,11 @@ void setupMLX90614() {
 }
 
 
-/*
-void measure_ACS721() {
+void measureACS721() {
   int buffer = 0, read = 0;
-  for (byte i = 0; i < ACS712_SAMPLES; i++) { buffer += analogRead(A1); delay(ACS712_WAIT_SAMPLE); }
+  for (byte i = 0; i < ACS712_SAMPLES; i++) { buffer += analogRead(A7); delay(ACS712_WAIT_SAMPLE); }
   acs721_current = buffer * ACS721_FACTOR;
 }
-*/
 
 
 void measureINA219() {
@@ -115,9 +115,8 @@ void updateDisplay() {
   display.println(String("V (shnt, mV): ") + shuntVoltage_mV);
   display.println(String("V (load,  V): ") + loadVoltage);
   display.println(String("I (load, mA): ") + loadCurrent_mA);
-  // display.println(String("7 (load, mA): ") + acs721_current);
-  display.println(String("Ta(C) = ") + ambienceT_degC);
-  display.println(String("To(C) = ") + objectT_degC);
+  // display.println(String("I (mosf, mA): ") + acs721_current);
+  display.println(String("T (C) = ") + ambienceT_degC + String(", ") + objectT_degC);
 
   display.display();
 }
@@ -142,18 +141,26 @@ void setup() {
 
   setupSerial();
   setupI2C();
+
   setupLCD();
   setupINA219();
   setupMLX90614();
+
+  pinMode(ELOAD_PIN, OUTPUT);
+  analogWrite(ELOAD_PIN, 0);
 
 }
 
 
 void loop() {
 
-  Serial.print("*");
+  Serial.println(String(" eloadGain = ") + eloadGain);
+
+  analogWrite(ELOAD_PIN, eloadGain++);
+
   measureINA219();
   measureMLX90614();
+  // measureACS721();
   updateDisplay();
   delay(PAUSE);
 
