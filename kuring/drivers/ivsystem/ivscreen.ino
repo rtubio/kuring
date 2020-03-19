@@ -9,7 +9,8 @@
 #define SERIAL_TIMEOUT      600           // timeout miliseconds; completing an approx. 1 second cycle
 
 #define PAUSE               100
-#define ELOAD_PIN           2
+#define ELOAD_PIN           3
+#define ELOAD_GAIN_INIT     50
 
 #define I2C_DISCOVER_WAIT   100      // ms delay after looking for I2C slaves
 #define I2C_FIRST_ADDRESS   8        // address of the first slave in the I2C bus
@@ -34,7 +35,8 @@ Adafruit_INA219 ina219(I2C_INA219_ADDR);
 Adafruit_MLX90614 mlx90614 = Adafruit_MLX90614();
 
 
-int eloadGain         = 0;
+bool eloadEnabled     = false;                  // if 'true', eloadGain gets incremented automatically
+int eloadGain         = ELOAD_GAIN_INIT;
 float acs721_current  = 0.0;
 float shuntVoltage_mV = 0.0, busVoltage = 0.0, loadCurrent_mA = 0.0, loadVoltage = 0.0;
 double ambienceT_degC = 0.0, objectT_degC = 0.0;
@@ -111,10 +113,11 @@ void updateDisplay() {
   display.println("KarbonTek - IV Tracer");
 
   // display.println("");
-  display.println(String("V (bus ,  V): ") + busVoltage);
-  display.println(String("V (shnt, mV): ") + shuntVoltage_mV);
+  // display.println(String("V (bus ,  V): ") + busVoltage);
+  // display.println(String("V (shnt, mV): ") + shuntVoltage_mV);
   display.println(String("V (load,  V): ") + loadVoltage);
   display.println(String("I (load, mA): ") + loadCurrent_mA);
+  display.println(String("N (gate,  #): ") + eloadGain);
   // display.println(String("I (mosf, mA): ") + acs721_current);
   display.println(String("T (C) = ") + ambienceT_degC + String(", ") + objectT_degC);
 
@@ -147,7 +150,7 @@ void setup() {
   setupMLX90614();
 
   pinMode(ELOAD_PIN, OUTPUT);
-  analogWrite(ELOAD_PIN, 0);
+  analogWrite(ELOAD_PIN, eloadGain);
 
 }
 
@@ -156,7 +159,7 @@ void loop() {
 
   Serial.println(String(" eloadGain = ") + eloadGain);
 
-  analogWrite(ELOAD_PIN, eloadGain++);
+  if (eloadEnabled == true ) {analogWrite(ELOAD_PIN, eloadGain++);}
 
   measureINA219();
   measureMLX90614();
