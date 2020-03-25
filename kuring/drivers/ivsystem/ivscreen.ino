@@ -3,6 +3,7 @@
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_INA219.h>
 #include <Adafruit_MLX90614.h>
+#include <Adafruit_MAX31865.h>
 
 #define SERIAL_SPEED        9600          // Serial port speed
 #define SERIAL_WAIT         100           // Serial port readiness waiting checkpoint
@@ -30,9 +31,15 @@ bool devices[I2C_MAX_SLAVES];        // array holding all the addresses found fo
 
 const float ACS721_FACTOR   = ( ADC_RANGE * ACS712_MVAMP ) / ( ACS712_SAMPLES * ADC_STEPS );
 
+// The value of the Rref resistor. Use 430.0 for PT100 and 4300.0 for PT1000
+#define RREF      430.0
+// The 'nominal' 0-degrees-C resistance of the sensor: 100.0 for PT100, 1000.0 for PT1000
+#define RNOMINAL  100.0
+
 Adafruit_SSD1306 display(128, 64);
 Adafruit_INA219 ina219(I2C_INA219_ADDR);
 Adafruit_MLX90614 mlx90614 = Adafruit_MLX90614();
+Adafruit_MAX31865 max31865 = Adafruit_MAX31865(10, 11, 12, 13);
 
 
 bool eloadEnabled     = false;                  // if 'true', eloadGain gets incremented automatically
@@ -40,6 +47,10 @@ int eloadGain         = ELOAD_GAIN_INIT;
 float acs721_current  = 0.0;
 float shuntVoltage_mV = 0.0, busVoltage = 0.0, loadCurrent_mA = 0.0, loadVoltage = 0.0;
 double ambienceT_degC = 0.0, objectT_degC = 0.0;
+
+uint16_t maxRTD       = 500;
+float maxT_degC       = -120;
+
 
 
 void scanI2C() {
@@ -86,6 +97,11 @@ void setupMLX90614() {
 }
 
 
+void setupMAX31865() {
+  max31865.begin(MAX31865_2WIRE);
+}
+
+
 void measureACS721() {
   int buffer = 0, read = 0;
   for (byte i = 0; i < ACS712_SAMPLES; i++) { buffer += analogRead(A7); delay(ACS712_WAIT_SAMPLE); }
@@ -107,7 +123,69 @@ void measureMLX90614() {
 }
 
 
+// sensor resistance wrt temperature: R(x) = R0 + R0*Ka*x + R0*Kb*x**2 + R0*Kc*x**3
+// cubic polynomial:                  R0*Kc*x**3 + R0*kb*x**2 + R0*Ka*x + (R0-R(x)) = 0
+// mathematical standard equation:    a*x**3 + b*x**2 + c*x + d = 0
+#define Ka          5.88E-3
+#define Kb          7.872E-6
+#define Kc          4.71E-9
+#define xPOL_d      RNOMINAL               // need to substract the readout (rtd) from MAX31865
+#define POL_c       RNOMINAL * Ka
+#define POL_b       RNOMINAL * Kb
+#define POL_a       RNOMINAL * Kc
+#define SOL_p       -1.0*POL_b / (3*POL_a)
+#define SOL_p3      SOL_p * SOL_p * SOL_p
+#define SOL_r       POL_c / (3*POL_a)
+#define CSQ_K       1.0 / 3.0
+
+
+double temp2rtd(float temp) { return RNOMINAL * (1 + Ka * temp + Kb * sq(temp) + Kc * pow(temp, 3)); }
+
+float rtd2temp(float rtd) {
+  float POL_d = xPOL_d - rtd;
+  float SOL_q = SOL_p3 + ( (POL_b*POL_c - 3.0*POL_a*POL_d) / (6.0 * sq(POL_a) ) );
+
+  // __term_1 = {q + [q2 + (r-p2)3]1/2}1/3
+  float __term_1 = cbrt( (SOL_q + sqrt(sq(SOL_q) + pow( (SOL_r - sq(SOL_p)), 3) ) ) );
+  // __term_2 = {q - [q2 + (r-p2)3]1/2}1/3
+  float __term_2 = cbrt( (SOL_q - sqrt(sq(SOL_q) + pow( (SOL_r - sq(SOL_p)), 3) ) ));
+  // return {q + [q2 + (r-p2)3]1/2}1/3   +   {q - [q2 + (r-p2)3]1/2}1/3   +   p
+
+  return __term_1 + __term_2 + SOL_p;
+}
+
+void measureMAX31865() {
+
+  maxRTD = max31865.readRTD();
+  maxT_degC = max31865.temperature(RNOMINAL, RREF);
+  uint8_t fault = max31865.readFault();
+
+  //maxT_degC = rtd2temp(maxRTD);
+
+  // maxT_degC = max31865.readRTD(); // max31865.temperature(RNOMINAL, RREF);
+  // uint8_t fault = max31865.readFault();
+  //Serial.println(String("fault = ") + fault);
+  // return;
+
+  /*
+  if (fault) {
+    //Serial.print("Fault 0x"); Serial.println(fault, HEX);
+    return;
+    if (fault & MAX31865_FAULT_HIGHTHRESH) { Serial.println("RTD High Threshold"); }
+    if (fault & MAX31865_FAULT_LOWTHRESH) { Serial.println("RTD Low Threshold"); }
+    if (fault & MAX31865_FAULT_REFINLOW) { Serial.println("REFIN- > 0.85 x Bias"); }
+    if (fault & MAX31865_FAULT_REFINHIGH) { Serial.println("REFIN- < 0.85 x Bias - FORCE- open"); }
+    if (fault & MAX31865_FAULT_RTDINLOW) { Serial.println("RTDIN- < 0.85 x Bias - FORCE- open"); }
+    if (fault & MAX31865_FAULT_OVUV) { Serial.println("Under/Over voltage"); }
+    max31865.clearFault();
+  }
+  */
+
+}
+
+
 void updateDisplay() {
+
   display.clearDisplay();
   display.setCursor(0, 5);
   display.println("KarbonTek - IV Tracer");
@@ -120,8 +198,10 @@ void updateDisplay() {
   display.println(String("N (gate,  #): ") + eloadGain);
   // display.println(String("I (mosf, mA): ") + acs721_current);
   display.println(String("T (C) = ") + ambienceT_degC + String(", ") + objectT_degC);
+  display.println(String("T (C) = ") + maxT_degC + ", " + maxRTD);
 
   display.display();
+
 }
 
 
@@ -148,6 +228,7 @@ void setup() {
   setupLCD();
   setupINA219();
   setupMLX90614();
+  setupMAX31865();
 
   pinMode(ELOAD_PIN, OUTPUT);
   analogWrite(ELOAD_PIN, eloadGain);
@@ -164,6 +245,8 @@ void loop() {
   measureINA219();
   measureMLX90614();
   // measureACS721();
+  measureMAX31865();
+
   updateDisplay();
   delay(PAUSE);
 
