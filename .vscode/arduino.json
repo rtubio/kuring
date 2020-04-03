@@ -1,8 +1,7 @@
 {
-    "sketch": "kuring/drivers/ivsystem/ivscreen.ino",
+    "sketch": "kuring/drivers/ivsystem/tests/load.ino",
     "port": "/dev/ttyUSB0",
-    "board": "arduino:avr:nano",
+    "board": "arduino:avr:uno",
     "output": "../build",
-    "debugger": "jlink",
-    "configuration": "cpu=atmega328old"
+    "debugger": "jlink"
 }
