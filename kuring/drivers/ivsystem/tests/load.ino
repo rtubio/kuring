@@ -11,11 +11,12 @@
 bool devices[I2C_MAX_SLAVES];        // array holding all the addresses found for the connected I2C devices
 
 // Set this value to 9, 8, 7, 6 or 5 to adjust the resolution
-#define DAC_RESOLUTION      (12)
 #define DAC_MIN             0
 #define DAC_MAX             4095
 #define DAC_WAIT            3000
 
+
+float adcVoltage = 0.0;
 
 Adafruit_MCP4725 dac;
 
@@ -59,13 +60,17 @@ void setup() {
 }
 
 void loop() {
+
     dac.setVoltage(DAC_MAX, false);
+    delay(100);
+    adcVoltage = analogRead(A3) * (5.0 / 1023.0);
+    Serial.println(String("dac = ") + DAC_MAX + String(", adc = ") + adcVoltage);
     delay(DAC_WAIT);
-    Serial.println(DAC_MAX);
+
     dac.setVoltage(DAC_MIN, false);
+    delay(100);
+    adcVoltage = analogRead(A3) * (5.0 / 1023.0);
+    Serial.println(String("dac = ") + DAC_MIN + String(", adc = ") + adcVoltage);
     delay(DAC_WAIT);
-    Serial.println(DAC_MIN);
-    dac.setVoltage(DAC_MAX, false);
-    delay(DAC_WAIT);
-    Serial.println(DAC_MAX);
+
 }
