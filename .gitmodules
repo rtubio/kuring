@@ -1,3 +1,6 @@
 [submodule "kuring/drivers/thermal-bench"]
 	path = kuring/drivers/thermal-bench
 	url = git@github.com:rtubio/thermal-bench.git
+[submodule "kuring/drivers/ardoven"]
+	path = kuring/drivers/ardoven
+	url = git@github.com:rtubio/ardoven.git
