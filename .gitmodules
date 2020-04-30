@@ -7,3 +7,6 @@
 [submodule "kuring/drivers/ivsystem"]
 	path = kuring/drivers/ivsystem
 	url = git@github.com:rtubio/ivsystem.git
+[submodule "kuring/drivers/mlx90640"]
+	path = kuring/drivers/mlx90640
+	url = git@github.com:rtubio/mlx90640.git
