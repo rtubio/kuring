@@ -4,3 +4,6 @@
 [submodule "kuring/drivers/ardoven"]
 	path = kuring/drivers/ardoven
 	url = git@github.com:rtubio/ardoven.git
+[submodule "kuring/drivers/ivsystem"]
+	path = kuring/drivers/ivsystem
+	url = git@github.com:rtubio/ivsystem.git
