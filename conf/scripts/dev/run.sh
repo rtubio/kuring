@@ -6,7 +6,7 @@
 # IMPORTANT: This script is thought to be invoked from the ROOT of the project.
 ####################
 
-source 'config/scripts.config'
+source 'conf/project.conf'
 
 echo "[info, $0] Starting execution, pwd = $(pwd)"
 

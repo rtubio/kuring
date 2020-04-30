@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source .env/bin/activate
+source 'conf/project.conf'
+source "$VENV_ACTIVATE"
 
 export __DJ_DEVPROD='dev' && cd kuring && clear && \
   python manage.py makemigrations && \

@@ -84,7 +84,7 @@ class ConfigurationBuilder():
             }
         }
 
-    def celery(self, config='../config/celery.json'):
+    def celery(self, config='../conf/celery.json'):
         """This function loads the configuration for Celery from a given file"""
         # NOTE # for backend configuraiton: # 'redis://localhost:6379/0' # 'django-db'
 

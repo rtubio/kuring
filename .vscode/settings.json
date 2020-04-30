@@ -1,16 +1,15 @@
 {
-    "python.pythonPath": ".env/bin/python",
+    "python.pythonPath": ".kuring/bin/python",
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,
-    "python.linting.flake8Args": [
-        "--max-line-length=120"
-    ],
     "search.exclude": {
-        ".__skr__/": true
+        ".skr/": true,
+        ".kuring/": true
     },
     "files.exclude": {
-        ".__skr__/": true,
+        ".skr/": true,
+        ".kuring/": true,
         "**/migrations/": true
     }
 }

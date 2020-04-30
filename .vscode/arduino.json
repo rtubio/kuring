@@ -1,7 +1,0 @@
-{
-    "sketch": "kuring/drivers/ivsystem/tests/load.ino",
-    "port": "/dev/ttyUSB0",
-    "board": "arduino:avr:uno",
-    "output": "../build",
-    "debugger": "jlink"
-}

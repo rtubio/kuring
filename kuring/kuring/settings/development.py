@@ -5,7 +5,7 @@ import kuring.settings.common as settings
 """Django DEVELOPMENT settings for kuring project."""
 
 ALLOWED_HOSTS = []
-DBCONFIG = '../config/db-dev.json'
+DBCONFIG = '../conf/db-dev.json'
 DEBUG = True
 MODE = 'Development Mode'
 

@@ -21,8 +21,8 @@ GRANT ALL PRIVILEGES ON DATABASE '$DBNAME' TO '$DBUSER';
 }
 
 
-source "config/scripts.config"
-source "config/sql.config"
+source "conf/project.conf"
+source "conf/sql.conf"
 source "$django_db_sh"
 
 echo -n 'Please input password for the new MySQL database user:'

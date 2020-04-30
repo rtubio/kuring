@@ -7,21 +7,6 @@
 # @author: ricardo@karbontek.co.jp
 
 
-setup_arduino () {
-
-  [[ -f "$arduino_udev" ]] && {
-    echo "<$arduino_udev> exists, skipping..."
-  } || {
-    sudo cp -f "$ardoven_udev" "$UDEV_ARDUINO_RULES"
-    echo "<$ardoven_udev> UDEV RULES copied to <$UDEV_ARDUINO_RULES>"
-  }
-
-  sudo cp -f "$ardoven_add_sh" "$UDEV_SCRIPTS_DIR/."
-  sudo cp -f "$ardoven_del_sh" "$UDEV_SCRIPTS_DIR/."
-
-}
-
-
 add_extra_repositories () {
   # docker repository
   sudo apt update
@@ -82,6 +67,7 @@ create_influxdb_secret () {
 install_influxdb () {
   # This function installs InfluxDB locally using docker and configures it with the same data than Django.
   # docker run --name=kuring-influxdb --publish=8086:8086 --hostname=influxdb --restart=always --detach influxdb:alpine
+  source "$VENV_ACTIVATE"
 
   echo -n "Please input the name for the InfluxDB database:"
   read dbname
@@ -150,6 +136,7 @@ install_influxdb () {
 
   create_influxdb_secret "$SECRETS_INFLUXDB" "$admpass" "$usrname" "$usrpass" "$dbname"
 
+  deactivate
 }
 
 
@@ -186,10 +173,11 @@ install_django () {
   python manage.py createsuperuser
   python manage.py collectstatic --no-input
   cd ..
+  deactivate
 }
 
 
-source 'config/scripts.config'
+source 'conf/project.conf'
 
 echo "[info, $0] Starting execution (DEV ENVIRONMENT SETUP), pwd = $(pwd)"
 export __DJ_DEVPROD='dev'
@@ -199,24 +187,18 @@ mkdir -p "$SECRETS_DIR"
 mkdir -p "$STATIC_DIR"
 # TODO # Remove if unnecessary: # mkdir -p "$CELERY_LOGS"
 
-# 1) Setting up Arduino environment
-setup_arduino
-
-# 2) Install Debian packages for DEVELOPMENT
+# 1) Install Debian packages for DEVELOPMENT
 add_extra_repositories
 install_sys_packages
 post_sys_install
 
-# 3) Setup Python and Javascript environments
+# 2) Setup Python and Javascript environments
 install_env_packages
 npm install
 
-# 4) Setup influxDB and REDIS
+# 3) Setup influxDB and REDIS
 install_influxdb
 install_redis
 
-# 5) Setup Django
+# 4) Setup Django
 install_django
-
-# 6) Restore environment and leave
-deactivate
