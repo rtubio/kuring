@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from asgiref.sync import async_to_sync
 import channels
 import logging
@@ -6,7 +7,37 @@ import logging
 from common import influxdb, time as _time
 
 
-class Driver(object):
+class AbstractDriver(ABC):
+    """
+    Abstract class for drivers to use it as a stub.
+    """
+
+    @abstractmethod
+    def load(self, abort):
+        pass
+
+    @abstractmethod
+    def run(self):
+        pass
+
+    @abstractmethod
+    def stop(self):
+        pass
+
+    @abstractmethod
+    def pause(self):
+        pass
+
+    @abstractmethod
+    def _notifyEvent(self, event, data):
+        pass
+
+    @abstractmethod
+    def _notifyData(self, sensor, data):
+        pass
+
+
+class GenericDriver(AbstractDriver):
     """
     Base class for the driver objects.
 

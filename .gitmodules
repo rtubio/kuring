@@ -1,0 +1,3 @@
+[submodule "kuring/drivers/thermal-bench"]
+	path = kuring/drivers/thermal-bench
+	url = git@github.com:rtubio/thermal-bench.git

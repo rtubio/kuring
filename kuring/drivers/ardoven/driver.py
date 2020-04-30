@@ -29,7 +29,7 @@ E_ERR_MARKERDIFFERS = 10
 E_ERR_UNSUPPORTEDCOMMAND = 11
 
 
-class ArdovenDriver(generic.Driver):
+class ArdovenDriver(generic.GenericDriver):
 
     type = -1
     serialPort = '/dev/arduino'
