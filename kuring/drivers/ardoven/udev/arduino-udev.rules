@@ -1,4 +1,0 @@
-# @ sargo :: 2341:0043
-# /etc/udev/rules.d/50-arduino.rules
-ACTION=="add", KERNEL=="ttyACM[0-9]*", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", MODE="0666", RUN+="/bin/bash /usr/local/bin/addArduino.sh"
-ACTION=="remove", KERNEL=="ttyACM[0-9]*", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", MODE="0666", RUN+="/bin/bash /usr/local/bin/delArduino.sh"

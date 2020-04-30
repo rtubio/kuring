@@ -3,20 +3,17 @@
         {
             "name": "Linux",
             "includePath": [
-                "/home/rtubio/software/arduino/libraries/Adafruit_INA219",
-                "/home/rtubio/.arduino15/packages/arduino/tools/**",
-                "/home/rtubio/.arduino15/packages/arduino/hardware/avr/1.8.1/**",
+                "/opt/arduino/sketch/libraries/MAX6675_library/**",
                 "${workspaceFolder}/**",
                 "/opt/arduino-1.8.12/hardware/arduino/avr/**",
                 "/opt/arduino-1.8.12/tools/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64",
             "forcedInclude": [
-                "/home/rtubio/.arduino15/packages/arduino/hardware/avr/1.8.1/cores/arduino/Arduino.h",
                 "/opt/arduino-1.8.12/hardware/arduino/avr/cores/arduino/Arduino.h"
             ]
         }
