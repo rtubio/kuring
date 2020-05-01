@@ -4,7 +4,7 @@
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,
     "python.linting.flake8Args": [
-        "--config=/home/rtubio/repos/karbon-kuring/conf/flake8.conf",
+        "--config=${workspaceFolder}/conf/flake8.conf",
         "--verbose"
     ],
     "search.exclude": {
