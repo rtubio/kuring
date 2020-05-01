@@ -3,6 +3,10 @@
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,
+    "python.linting.flake8Args": [
+        "--config=/home/rtubio/repos/karbon-kuring/conf/flake8.conf",
+        "--verbose"
+    ],
     "search.exclude": {
         ".skr/": true,
         ".kuring/": true
@@ -11,5 +15,10 @@
         ".skr/": true,
         ".kuring/": true,
         "**/migrations/": true
+    },
+    "macros": {
+        "gitCommitSync": [
+            "git.commitAll", "git.sync"
+        ]
     }
 }
