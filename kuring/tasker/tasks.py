@@ -7,8 +7,9 @@ from celery import shared_task
 from celery.contrib.abortable import AbortableTask
 from celery.utils.log import get_task_logger
 
-from common import influxdb, time as _time
-from drivers.ardoven import driver as ardoven_driver
+from common import time as _time
+from tools import influxdb
+# from drivers.ardoven import driver as ardoven_driver
 
 
 COUNTER_MAX = 5000
@@ -87,11 +88,11 @@ def collectData(self, taskpk, counter=COUNTER_MAX, channel_key='kuring', wait=1)
     taskid = self.request.id
     _l.debug(f"Running driver task for <Ardoven>, with taskid = <{taskid}>")
 
-    ardoven = ardoven_driver.ArdovenDriver(channel_key, group_key, taskpk)
-    ardoven.load(self)
-
-    ardoven.run()
-    ardoven.stop()
+    # TODO - generic driver management
+    # ardoven = ardoven_driver.ArdovenDriver(channel_key, group_key, taskpk)
+    # ardoven.load(self)
+    # ardoven.run()
+    # ardoven.stop()
 
     message = {'type': 'task.finished', 'taskpk': taskpk, 'taskid': taskid, 'timestamp': _time.timestamp()}
     async_to_sync(layer.group_send)(channel_key, message)

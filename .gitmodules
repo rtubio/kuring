@@ -10,3 +10,6 @@
 [submodule "kuring/drivers/mlx90640"]
 	path = kuring/drivers/mlx90640
 	url = git@github.com:rtubio/mlx90640.git
+[submodule "xpython"]
+	path = xpython
+	url = git@github.com:rtubio/xpython.git

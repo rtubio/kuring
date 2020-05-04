@@ -154,7 +154,11 @@ install_env_packages () {
   [[ ! -d "$VENV_DIR" ]] && virtualenv --python=python3 "$VENV_DIR" && echo "[info, $0] \"$VENV_DIR\" initialized"
   [[ -f "$REQUIREMENTS_FILE" ]] && {
     source "$VENV_ACTIVATE"
+    echo "XPYTHON_D = $XPYTHON_D"
+    echo "XPYTHON_CONF_D = $XPYTHON_CONF_D"
+    echo "XPYTHON_PKGS = $XPYTHON_PKGS"
     pip install -r "$REQUIREMENTS_FILE"
+    pip install -r "$XPYTHON_PKGS"
     deactivate
   } || {
     echo "[warn, $0] No \"$REQUIREMENTS_FILE\" available, skipping VENV package installation..."
