@@ -14,7 +14,7 @@ from tools import influxdb
 
 COUNTER_MAX = 5000
 _l = get_task_logger(__name__)
-layer = channels.layers.get_channel_layer()
+layer = channels.layers.get_channel_layer()fd
 
 
 @shared_task
